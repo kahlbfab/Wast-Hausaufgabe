@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1544531235711.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "68830239",
+    "id" : "F9BBCE87",
+    "lastKnownWriteTime" : 1544532033,
+    "last_content_update" : 1544532033630,
+    "path" : "~/GitHub/Wast-Hausaufgabe/HA_main.R",
+    "project_path" : "HA_main.R",
+    "properties" : {
+        "cursorPosition" : "8,3",
+        "scrollLine" : "2"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
