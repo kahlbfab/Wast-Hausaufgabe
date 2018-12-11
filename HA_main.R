@@ -1,0 +1,159 @@
+# Hausaufgabe
+#### Aufgabe 1 ####
+
+library("tidyr")
+library(readr)
+require(dplyr, quietly = T)
+library(ggplot2)
+#daten einlesen
+ugz_luftqualitaetsmessung_seit_2012 <- read_csv("ugz_luftqualitaetsmessung_seit-2012.csv")
+luftqualitaet <- as_tibble(ugz_luftqualitaetsmessung_seit_2012)
+
+#werte und titel separieren
+titel <- slice(luftqualitaet, c(2))
+titel[1] <- "Datum"
+werte <- slice(luftqualitaet, c(-1:-5))
+
+#tabelle nach ort auseinander nehmen
+stampfenbach <- werte %>% select(1,2:14) %>%
+  mutate(station = "Stampfenbachstrasse")
+stampfenbach_titel <- titel %>% select(1,2:14)
+stampfenbach_titel[15] <- "Station"
+names(stampfenbach) <- stampfenbach_titel
+
+schimmel <- werte %>% select(1,15:22) %>%
+  mutate(station = "Schimmelstrasse")
+schimmel_titel <- titel %>% select(1,15:22)
+schimmel_titel[10] <- "Station"
+names(schimmel) <- schimmel_titel
+
+heubeer <- werte %>% select(1,23:26) %>%
+  mutate(station = "Heubeeribüel")
+heubeer_titel <- titel %>% select(1,23:26)
+heubeer_titel[6] <- "Station"
+names(heubeer) <- heubeer_titel
+
+rosengarten <- werte %>% select(1,27:30) %>%   
+  mutate(station = "Rosengarten")
+rosengarten_titel <- titel %>% select(1,27:30)
+rosengarten_titel[6] <- "Station"
+names(rosengarten) <- rosengarten_titel
+
+#tabelle zusammensetzen
+luftqual <- bind_rows(stampfenbach, schimmel, heubeer, rosengarten)
+str(luftqual)
+#Zahlen von character nach factor wandeln
+#numeric_change <- names(luftqual)[2:14]
+#luftqual[factor_change] <- lapply(luftqual[numeric_change], as.numeric)
+#View(luftqual)
+
+
+
+
+luftqual[2:14] <- as_tibble(sapply(luftqual[2:14], as.numeric))
+str(luftqual)
+View(luftqual)
+
+
+
+#### Aufgabe 2 ####
+#mit ggplot
+gather(luftqual, key = variable, value = value, c(2,3,4,6,7,8)) %>% 
+  ggplot(aes(x = Datum, y = value, group = variable)) +
+  geom_line(aes(color = variable)) +
+  facet_wrap(~Station)
+
+#mit ggally #falscher Ansatz
+library(GGally)
+ggpairs(luftqual, mapping = ggplot2::aes(color = Station), columns = c(2,3,4,6,7,8),
+        upper =list(continuous = wrap("points", alpha = 0.2)))
+
+
+#### Aufgabe 3 ####
+# Kombinationen von Variablen???????????
+
+
+luftqual.NA <- luftqual %>% select(everything()) %>% summarise_all(funs(sum(is.na(.)))) %>%
+  gather(variable, value,c(2:14)) %>% select(c(3,4)) %>% ggplot(aes(reorder(x = c(1:13), -value) , y = value)) + xlab("")+
+  geom_bar(stat = "identity", aes(fill = variable)) + theme(axis.text.x = element_blank(), axis.ticks.x=element_blank())
+
+luftqual.NA
+
+#### Aufgabe 4 ####
+
+# Feinstaub (PM10) jeweils fuer die Messpunkte 
+# Stampfenbachstrasse, Schimmelstrasse, Rosengartenstrasse
+# !! Heubeeribüel hat keine Messung von PM10 
+
+# PM10 
+# Jahresmittelgrenzwert: 20ug/m^3
+# Tagesmittelgrenzwert: 50ug/m^3, darf max. 1x pro Jahr ueberschritten werden
+
+
+
+
+# uberschittene Tagesmittelgrenzwerte
+luftqual.PM10 <- luftqual %>% select(Datum, 'Feinstaub PM10', Station) %>%
+  mutate(PM10_uberschritt = luftqual$`Feinstaub PM10` >= 50 )
+
+#1 wie oft wird der Tagesmittel-Grenzwert an welcher Station ueberschritten?
+luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.rm = T))
+
+#2 ueberschrittenen Tagesmittelgrenzwerte fuer alle Stationen ueber die Zeit in einer Grafik
+luftqual.PM10 %>% filter(PM10_uberschritt) %>% 
+  ggplot(aes(x=Datum, y=`Feinstaub PM10`)) + geom_point(aes(color = Station)) + ggtitle("PM10 > 50")
+
+# Der Tagesmittelgrenzwert wird bei allen Stationen oft an den gleichen Tagen uebertroffen.
+# Dies ist gut moeglich da alle Messstatinen unter aehnlichen Einfluessen auf den Feinstaub reagieren
+# wie zb. das Wetter.
+
+#3 In welchen Jahren und Stationen ist der Anteil der Tage mit Grenzwert uberschreitungen
+# signifikant groesser als zufaellig
+
+# Jahresmittelgrenzwert = 20ug/m^3
+
+# Messwerte sind iid: independent and identically distributed
+punif(q=, min=0, max=365) # P[X <= x]
+
+luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.rm = T)) %>%
+  mutate(wkeit_n = punif(q=n, min=0, max=365))
+
+#### nicht sicher obe uniform Verteilung stimmt.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#### Aufgabe 5 ####
+
+# Regendauer ~ PM10 pro Station 
+# select(luftqual, Datum, Regendauer)
+# PM10_temp <- luftqual %>% select(Datum,`Feinstaub PM10`, Station) %>%
+  
+# regendauer zu allen Stationen hinzufuegen mit leftjoin
+ordered_PM10 <- left_join(x = select(luftqual, Datum,`Feinstaub PM10`, Station),
+          y = filter(luftqual, Station == "Stampfenbachstrasse") %>% select( Datum, Regendauer),
+          by = "Datum")
+  
+# 
+ggplot(ordered_PM10, aes(x= Regendauer, y= `Feinstaub PM10`)) + geom_point(aes(color = Station))
+
+
