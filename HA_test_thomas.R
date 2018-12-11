@@ -5,17 +5,16 @@ library("tidyr")
 library(readr)
 require(dplyr, quietly = T)
 library(ggplot2)
-
-# Daten einlesen
-ugz_luftqualitaetsmessung_seit_2012 <- read_csv("ugz_luftqualitaetsmessung_seit-2012.csv")
+#daten einlesen
+ugz_luftqualitaetsmessung_seit_2012 <- read_csv("C:/Users/Thha/Documents/GitHub/Wast-Hausaufgabe/ugz_luftqualitaetsmessung_seit-2012.csv")
 luftqualitaet <- as_tibble(ugz_luftqualitaetsmessung_seit_2012)
 
-# Werte und titel separieren
+#werte und titel separieren
 titel <- slice(luftqualitaet, c(2))
 titel[1] <- "Datum"
 werte <- slice(luftqualitaet, c(-1:-5))
 
-# Tabelle nach ort auseinander nehmen
+#tabelle nach ort auseinander nehmen
 stampfenbach <- werte %>% select(1,2:14) %>%
   mutate(station = "Stampfenbachstrasse")
 stampfenbach_titel <- titel %>% select(1,2:14)
@@ -40,11 +39,17 @@ rosengarten_titel <- titel %>% select(1,27:30)
 rosengarten_titel[6] <- "Station"
 names(rosengarten) <- rosengarten_titel
 
-# Tabelle zusammensetzen
+#tabelle zusammensetzen
 luftqual <- bind_rows(stampfenbach, schimmel, heubeer, rosengarten)
 str(luftqual)
+#Zahlen von character nach factor wandeln
+#numeric_change <- names(luftqual)[2:14]
+#luftqual[factor_change] <- lapply(luftqual[numeric_change], as.numeric)
+#View(luftqual)
 
-# Zahlen von character nach numeric wandeln
+
+
+
 luftqual[2:14] <- as_tibble(sapply(luftqual[2:14], as.numeric))
 str(luftqual)
 View(luftqual)
@@ -52,19 +57,21 @@ View(luftqual)
 
 
 #### Aufgabe 2 ####
-# mit ggplot
+#mit ggplot
 gather(luftqual, key = variable, value = value, c(2,3,4,6,7,8)) %>% 
   ggplot(aes(x = Datum, y = value, group = variable)) +
   geom_line(aes(color = variable)) +
   facet_wrap(~Station)
 
-# mit ggally #falscher Ansatz
-# library(GGally)
-# ggpairs(luftqual, mapping = ggplot2::aes(color = Station), columns = c(2,3,4,6,7,8),
-#         upper =list(continuous = wrap("points", alpha = 0.2)))
+#mit ggally #falscher Ansatz
+library(GGally)
+ggpairs(luftqual, mapping = ggplot2::aes(color = Station), columns = c(2,3,4,6,7,8),
+        upper =list(continuous = wrap("points", alpha = 0.2)))
 
 
 #### Aufgabe 3 ####
+
+
 library(VIM)
 
 par(mar= c(4,2,2,2))
@@ -79,6 +86,18 @@ View(luftqual.A3)
 aggr_plot <- aggr(luftqual.A3, col=c('navyblue','red'), 
                   numbers=TRUE, sortVars=TRUE, labels=names(luftqual.A3), cex.axis=.7, gap=3, ylab=c("Histogram of missing data","Pattern"), cex.lab = 1.2)
 
+
+
+
+
+
+### Alt nicht mehr nötig
+luftqual.NA <- luftqual %>% select(everything()) %>% summarise_all(funs(sum(is.na(.)))) %>%
+  gather(variable, value,c(2:14)) %>% select(c(3,4)) %>% ggplot(aes(reorder(x = c(1:13), -value) , y = value)) + xlab("")+
+  geom_bar(stat = "identity", aes(fill = variable)) + theme(axis.text.x = element_blank(), axis.ticks.x=element_blank())
+
+luftqual.NA
+
 #### Aufgabe 4 ####
 
 # Feinstaub (PM10) jeweils fuer die Messpunkte 
@@ -88,6 +107,8 @@ aggr_plot <- aggr(luftqual.A3, col=c('navyblue','red'),
 # PM10 
 # Jahresmittelgrenzwert: 20ug/m^3
 # Tagesmittelgrenzwert: 50ug/m^3, darf max. 1x pro Jahr ueberschritten werden
+
+
 
 
 # uberschittene Tagesmittelgrenzwerte
@@ -111,10 +132,32 @@ luftqual.PM10 %>% filter(PM10_uberschritt) %>%
 # Jahresmittelgrenzwert = 20ug/m^3
 
 # Messwerte sind iid: independent and identically distributed
+punif(q=, min=0, max=365) # P[X <= x]
+
 luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.rm = T)) %>%
   mutate(wkeit_n = punif(q=n, min=0, max=365))
 
 #### nicht sicher obe uniform Verteilung stimmt.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #### Aufgabe 5 ####
@@ -122,12 +165,11 @@ luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.r
 # Regendauer ~ PM10 pro Station 
 # select(luftqual, Datum, Regendauer)
 # PM10_temp <- luftqual %>% select(Datum,`Feinstaub PM10`, Station) %>%
-  
+
 # regendauer zu allen Stationen hinzufuegen mit leftjoin
 ordered_PM10 <- left_join(x = select(luftqual, Datum,`Feinstaub PM10`, Station),
-          y = filter(luftqual, Station == "Stampfenbachstrasse") %>% select( Datum, Regendauer),
-          by = "Datum")
-  
-# Plot
-ggplot(ordered_PM10, aes(x= Regendauer, y= `Feinstaub PM10`)) + geom_point(aes(color = Station))
+                          y = filter(luftqual, Station == "Stampfenbachstrasse") %>% select( Datum, Regendauer),
+                          by = "Datum")
 
+# 
+ggplot(ordered_PM10, aes(x= Regendauer, y= `Feinstaub PM10`)) + geom_point(aes(color = Station))
