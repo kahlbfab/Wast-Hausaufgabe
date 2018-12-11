@@ -69,7 +69,7 @@ library(VIM)
 par(mar= c(4,2,2,2))
 
 
-# All Nan Werte zu NA`s ersetzen
+# Alle Nan Werte zu NA`s ersetzen
 luftqual.A3 <- rapply(luftqual, f=function(x) ifelse(is.nan(x),NA,x), how="replace")
 View(luftqual.A3)
 
@@ -77,7 +77,7 @@ View(luftqual.A3)
 names(luftqual.A3) <- c("Datum", "SO2", "CO", "O3_max_h1", "O3_nb_h1>120", "NO2", "NO", "PM10", "T", "Hr", "p", "WVS", "StrGlo", "RainDur", "Station")
 View(luftqual.A3)
 
-# Anteil NA in Variable und Kombinationen von Varibablen
+# Anteil von NA in Variable und Kombinationen von Varibablen mittels Package VIM
 aggr_plot <- aggr(luftqual.A3, col=c('navyblue','red'), 
                   numbers=TRUE, sortVars=TRUE, labels=names(luftqual.A3), cex.axis=0.7, gap=0.5, ylab=c("Histogram of missing data","Pattern"), cex.lab = 1)
 
