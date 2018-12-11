@@ -66,8 +66,8 @@ gather(luftqual, key = variable, value = value, c(2,3,4,6,7,8)) %>%
 
 #### Aufgabe 3 ####
 library(VIM)
-
 par(mar= c(4,2,2,2))
+
 
 
 luftqual.A3 <- rapply(luftqual, f=function(x) ifelse(is.nan(x),NA,x), how="replace")
@@ -78,6 +78,11 @@ View(luftqual.A3)
 
 aggr_plot <- aggr(luftqual.A3, col=c('navyblue','red'), 
                   numbers=TRUE, sortVars=TRUE, labels=names(luftqual.A3), cex.axis=.7, gap=3, ylab=c("Histogram of missing data","Pattern"), cex.lab = 1.2)
+
+# Anzahl NA`s im Datensatz
+
+sum(is.na(luftqual.A3))
+
 
 #### Aufgabe 4 ####
 
