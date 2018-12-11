@@ -79,7 +79,7 @@ View(luftqual.A3)
 
 # Anteil NA in Variable und Kombinationen von Varibablen
 aggr_plot <- aggr(luftqual.A3, col=c('navyblue','red'), 
-                  numbers=TRUE, sortVars=TRUE, labels=names(luftqual.A3), cex.axis=.7, gap=3, ylab=c("Histogram of missing data","Pattern"), cex.lab = 1.2)
+                  numbers=TRUE, sortVars=TRUE, labels=names(luftqual.A3), cex.axis=0.7, gap=3, ylab=c("Histogram of missing data","Pattern"), cex.lab = 0.7)
 
 # Anzahl NA`s im Datensatz
 sum(is.na(luftqual.A3))
