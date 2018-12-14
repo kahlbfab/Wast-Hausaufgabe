@@ -119,10 +119,18 @@ luftqual.PM10 %>% filter(PM10_uberschritt) %>%
 # Jahresmittelgrenzwert = 20ug/m^3
 
 # Messwerte sind iid: independent and identically distributed
-luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.rm = T)) %>%
-  mutate(wkeit_n = punif(q=n, min=0, max=365))
+# luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.rm = T)) %>%
+#   mutate(wkeit_n = punif(q=n, min=0, max=365))
 
-#### nicht sicher obe uniform Verteilung stimmt.
+# Datum nur das Jahr interessant
+luftqual.PM10 %>% mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
+  group_by(Jahr, Station) %>%
+  summarize(n = sum(PM10_uberschritt, na.rm = T))
+
+# t test: 
+# h0: mu =  
+# h1:
+#t.test(daten, mu = 8.2, altern = "two.sided")
 
 
 #### Aufgabe 5 ####
