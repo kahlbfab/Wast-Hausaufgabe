@@ -47,12 +47,15 @@ str(luftqual)
 #luftqual[factor_change] <- lapply(luftqual[numeric_change], as.numeric)
 #View(luftqual)
 
-
+# Wetterdaten "manipulieren" MAster Stampfenbach , Slaves andere Stationen
+luftqual <- luftqual %>% group_by(Datum) %>% arrange(Datum) %>% fill(Lufttemperatur : Regendauer, .direction = "down") %>% arrange(Station)
+View(luftqual)
 
 
 luftqual[2:14] <- as_tibble(sapply(luftqual[2:14], as.numeric))
 str(luftqual)
 View(luftqual)
+
 
 
 
@@ -97,6 +100,7 @@ luftqual.NA <- luftqual %>% select(everything()) %>% summarise_all(funs(sum(is.n
   geom_bar(stat = "identity", aes(fill = variable)) + theme(axis.text.x = element_blank(), axis.ticks.x=element_blank())
 
 luftqual.NA
+
 
 #### Aufgabe 4 ####
 

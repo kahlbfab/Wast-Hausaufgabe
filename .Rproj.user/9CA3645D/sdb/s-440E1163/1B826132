@@ -12,15 +12,15 @@
     "path" : null,
     "project_path" : null,
     "properties" : {
-        "cacheKey" : "8E4FF6B1",
+        "cacheKey" : "A100BF1",
         "caption" : "luftqual",
-        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=luftqual&cache_key=8E4FF6B1",
-        "displayedObservations" : 9984,
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=luftqual&cache_key=A100BF1",
+        "displayedObservations" : "9984",
         "environment" : "",
         "object" : "luftqual",
-        "preview" : 0,
-        "totalObservations" : 9984,
-        "variables" : 15
+        "preview" : "0",
+        "totalObservations" : "9984",
+        "variables" : "15"
     },
     "relative_order" : 3,
     "source_on_save" : false,

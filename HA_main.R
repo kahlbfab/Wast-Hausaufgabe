@@ -44,6 +44,10 @@ names(rosengarten) <- rosengarten_titel
 luftqual <- bind_rows(stampfenbach, schimmel, heubeer, rosengarten)
 str(luftqual)
 
+# Wetterdaten "manipulieren" MAster Stampfenbach , Slaves andere Stationen
+luftqual <- luftqual %>% group_by(Datum) %>% arrange(Datum) %>% fill(Lufttemperatur : Regendauer, .direction = "down") %>% arrange(Station)
+View(luftqual)
+
 # Zahlen von character nach numeric wandeln
 luftqual[2:14] <- as_tibble(sapply(luftqual[2:14], as.numeric))
 str(luftqual)
@@ -146,4 +150,23 @@ ordered_PM10 <- left_join(x = select(luftqual, Datum,`Feinstaub PM10`, Station),
   
 # Plot
 ggplot(ordered_PM10, aes(x= Regendauer, y= `Feinstaub PM10`)) + geom_point(aes(color = Station))
+
+
+
+##### Aufgabe 6#################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

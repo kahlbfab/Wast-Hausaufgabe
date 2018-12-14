@@ -12,15 +12,15 @@
     "path" : null,
     "project_path" : null,
     "properties" : {
-        "cacheKey" : "2027D7E7",
+        "cacheKey" : "EBC5C85E",
         "caption" : "luftqual.A3",
-        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=luftqual.A3&cache_key=2027D7E7",
-        "displayedObservations" : 9984,
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=luftqual.A3&cache_key=EBC5C85E",
+        "displayedObservations" : "9984",
         "environment" : "",
         "object" : "luftqual.A3",
-        "preview" : 0,
-        "totalObservations" : 9984,
-        "variables" : 15
+        "preview" : "0",
+        "totalObservations" : "9984",
+        "variables" : "15"
     },
     "relative_order" : 4,
     "source_on_save" : false,
