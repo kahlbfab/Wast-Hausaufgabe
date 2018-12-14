@@ -90,7 +90,6 @@ sum(is.na(luftqual.A3))
 
 
 
-
 #### Aufgabe 4 ####
 
 # Feinstaub (PM10) jeweils fuer die Messpunkte 

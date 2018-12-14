@@ -5,16 +5,17 @@ library("tidyr")
 library(readr)
 require(dplyr, quietly = T)
 library(ggplot2)
-#daten einlesen
-ugz_luftqualitaetsmessung_seit_2012 <- read_csv("C:/Users/Thha/Documents/GitHub/Wast-Hausaufgabe/ugz_luftqualitaetsmessung_seit-2012.csv")
+
+# Daten einlesen
+ugz_luftqualitaetsmessung_seit_2012 <- read_csv("ugz_luftqualitaetsmessung_seit-2012.csv")
 luftqualitaet <- as_tibble(ugz_luftqualitaetsmessung_seit_2012)
 
-#werte und titel separieren
+# Werte und titel separieren
 titel <- slice(luftqualitaet, c(2))
 titel[1] <- "Datum"
 werte <- slice(luftqualitaet, c(-1:-5))
 
-#tabelle nach ort auseinander nehmen
+# Tabelle nach ort auseinander nehmen
 stampfenbach <- werte %>% select(1,2:14) %>%
   mutate(station = "Stampfenbachstrasse")
 stampfenbach_titel <- titel %>% select(1,2:14)
@@ -39,60 +40,53 @@ rosengarten_titel <- titel %>% select(1,27:30)
 rosengarten_titel[6] <- "Station"
 names(rosengarten) <- rosengarten_titel
 
-#tabelle zusammensetzen
+# Tabelle zusammensetzen
 luftqual <- bind_rows(stampfenbach, schimmel, heubeer, rosengarten)
 str(luftqual)
-#Zahlen von character nach factor wandeln
-#numeric_change <- names(luftqual)[2:14]
-#luftqual[factor_change] <- lapply(luftqual[numeric_change], as.numeric)
-#View(luftqual)
 
 # Wetterdaten "manipulieren" MAster Stampfenbach , Slaves andere Stationen
 luftqual <- luftqual %>% group_by(Datum) %>% arrange(Datum) %>% fill(Lufttemperatur : Regendauer, .direction = "down") %>% arrange(Station)
 View(luftqual)
 
-
+# Zahlen von character nach numeric wandeln
 luftqual[2:14] <- as_tibble(sapply(luftqual[2:14], as.numeric))
 str(luftqual)
 View(luftqual)
 
 
 
-
 #### Aufgabe 2 ####
-#mit ggplot
+# mit ggplot
 gather(luftqual, key = variable, value = value, c(2,3,4,6,7,8)) %>% 
   ggplot(aes(x = Datum, y = value, group = variable)) +
   geom_line(aes(color = variable)) +
   facet_wrap(~Station)
 
-#mit ggally #falscher Ansatz
-library(GGally)
-ggpairs(luftqual, mapping = ggplot2::aes(color = Station), columns = c(2,3,4,6,7,8),
-        upper =list(continuous = wrap("points", alpha = 0.2)))
+# mit ggally #falscher Ansatz
+# library(GGally)
+# ggpairs(luftqual, mapping = ggplot2::aes(color = Station), columns = c(2,3,4,6,7,8),
+#         upper =list(continuous = wrap("points", alpha = 0.2)))
 
 
 #### Aufgabe 3 ####
-
-
 library(VIM)
-
 par(mar= c(4,2,2,2))
 
 
+# Alle Nan Werte zu NA`s ersetzen
 luftqual.A3 <- rapply(luftqual, f=function(x) ifelse(is.nan(x),NA,x), how="replace")
 View(luftqual.A3)
 
+# Neue Namen für Header, ansonsten kein Platz für Plot
 names(luftqual.A3) <- c("Datum", "SO2", "CO", "O3_max_h1", "O3_nb_h1>120", "NO2", "NO", "PM10", "T", "Hr", "p", "WVS", "StrGlo", "RainDur", "Station")
 View(luftqual.A3)
 
+# Anteil von NA in Variable und Kombinationen von Varibablen mittels Package VIM
 aggr_plot <- aggr(luftqual.A3, col=c('navyblue','red'), 
-                  numbers=TRUE, sortVars=TRUE, labels=names(luftqual.A3), cex.axis=.7, gap=3, ylab=c("Histogram of missing data","Pattern"), cex.lab = 1.2)
+                  numbers=TRUE, sortVars=TRUE, labels=names(luftqual.A3), cex.axis=0.7, gap=0.5, ylab=c("Histogram of missing data","Pattern"), cex.lab = 1)
 
+# Anzahl NA`s im Datensatz
 sum(is.na(luftqual.A3))
-
-
-
 
 ### Alt nicht mehr nötig
 luftqual.NA <- luftqual %>% select(everything()) %>% summarise_all(funs(sum(is.na(.)))) %>%
@@ -111,8 +105,6 @@ luftqual.NA
 # PM10 
 # Jahresmittelgrenzwert: 20ug/m^3
 # Tagesmittelgrenzwert: 50ug/m^3, darf max. 1x pro Jahr ueberschritten werden
-
-
 
 
 # uberschittene Tagesmittelgrenzwerte
@@ -136,32 +128,18 @@ luftqual.PM10 %>% filter(PM10_uberschritt) %>%
 # Jahresmittelgrenzwert = 20ug/m^3
 
 # Messwerte sind iid: independent and identically distributed
-punif(q=, min=0, max=365) # P[X <= x]
+# luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.rm = T)) %>%
+#   mutate(wkeit_n = punif(q=n, min=0, max=365))
 
-luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.rm = T)) %>%
-  mutate(wkeit_n = punif(q=n, min=0, max=365))
+# Datum nur das Jahr interessant
+luftqual.PM10 %>% mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
+  group_by(Jahr, Station) %>%
+  summarize(n = sum(PM10_uberschritt, na.rm = T))
 
-#### nicht sicher obe uniform Verteilung stimmt.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# t test: 
+# h0: mu =  
+# h1:
+#t.test(daten, mu = 8.2, altern = "two.sided")
 
 
 #### Aufgabe 5 ####
@@ -175,5 +153,25 @@ ordered_PM10 <- left_join(x = select(luftqual, Datum,`Feinstaub PM10`, Station),
                           y = filter(luftqual, Station == "Stampfenbachstrasse") %>% select( Datum, Regendauer),
                           by = "Datum")
 
-# 
+# Plot
 ggplot(ordered_PM10, aes(x= Regendauer, y= `Feinstaub PM10`)) + geom_point(aes(color = Station))
+
+
+
+##### Aufgabe 6#################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
