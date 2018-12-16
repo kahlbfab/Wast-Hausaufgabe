@@ -100,10 +100,13 @@ sum(is.na(luftqual.A3))
 # Jahresmittelgrenzwert: 20ug/m^3
 # Tagesmittelgrenzwert: 50ug/m^3, darf max. 1x pro Jahr ueberschritten werden
 
+# brauche die Daten in diesem Format. Was ist falsch mit den anderen?
+luftqual.A4 <- bind_rows(stampfenbach, schimmel, heubeer, rosengarten)
+luftqual.A4[2:14] <- as_tibble(sapply(luftqual.A4[2:14], as.numeric))
 
 # uberschittene Tagesmittelgrenzwerte
-luftqual.PM10 <- luftqual %>% select(Datum, 'Feinstaub PM10', Station) %>%
-  mutate(PM10_uberschritt = luftqual$`Feinstaub PM10` >= 50 )
+luftqual.PM10 <- luftqual.A4 %>% select(Datum, 'Feinstaub PM10', Station) %>%
+  mutate(PM10_uberschritt = luftqual.A4$`Feinstaub PM10` >= 50 )
 
 #1 wie oft wird der Tagesmittel-Grenzwert an welcher Station ueberschritten?
 luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.rm = T))
@@ -121,9 +124,6 @@ luftqual.PM10 %>% filter(PM10_uberschritt) %>%
 
 # Jahresmittelgrenzwert = 20ug/m^3
 
-# Messwerte sind iid: independent and identically distributed
-# luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.rm = T)) %>%
-#   mutate(wkeit_n = punif(q=n, min=0, max=365))
 
 # Datum nur das Jahr interessant
 luftqual.PM10 %>% mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
@@ -151,11 +151,16 @@ ordered_PM10 <- left_join(x = select(luftqual, Datum,`Feinstaub PM10`, Station),
 ggplot(ordered_PM10, aes(x= Regendauer, y= `Feinstaub PM10`)) +
   geom_point(aes(color = Station),  alpha = 0.5)
 
-# Test
-# stimmt das? => würde klar nicht verworfen (evt fehler wegen NA?)
-t.test(x = ordered_PM10$`Feinstaub PM10`[ordered_PM10$Regendauer == 0], 
-       y = ordered_PM10$`Feinstaub PM10`[ordered_PM10$Regendauer != 0],
-       conf.level = 0.99, alternative = "less")
+# Daten fuer Test Praeparieren
+PM10_test <- ordered_PM10 %>% group_by(Datum) %>%
+  summarise(PM10_mean = mean(`Feinstaub PM10`, na.rm = T) ,
+            Regendauer = Regendauer[1])
+
+# tTest
+t.test(x = PM10_test$PM10_mean[PM10_test$Regendauer == 0], 
+       y = PM10_test$PM10_mean[PM10_test$Regendauer != 0],
+       conf.level = 0.99, alternative = "greater")
+# p < 0.01 --> h0 verwerfen 
 
 ##### Aufgabe 6#################
 # fehler beim einlesen weil bei gewissen Antworten kommas drin sind
