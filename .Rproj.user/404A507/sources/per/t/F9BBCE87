@@ -5,15 +5,15 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "1750304251",
+    "hash" : "2143593114",
     "id" : "F9BBCE87",
-    "lastKnownWriteTime" : 1544798460,
-    "last_content_update" : 1544798460054,
+    "lastKnownWriteTime" : 1544978469,
+    "last_content_update" : 1544978469893,
     "path" : "~/GitHub/Wast-Hausaufgabe/HA_main.R",
     "project_path" : "HA_main.R",
     "properties" : {
-        "cursorPosition" : "167,0",
-        "scrollLine" : "152"
+        "cursorPosition" : "217,0",
+        "scrollLine" : "199"
     },
     "relative_order" : 1,
     "source_on_save" : false,
