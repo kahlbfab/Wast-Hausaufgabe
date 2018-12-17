@@ -4,9 +4,9 @@ author: "J.Brändli, F.Kahlbacher, T.Haas"
 date: "17 Dezember 2018"
 header-includes: 
   \usepackage{fancyhdr}
-  \addtolength{\headheight}{1.0cm} 
+  \addtolength{\headheight}{1.5cm} 
   \pagestyle{fancyplain} 
-  \rhead{\includegraphics[height=1.2cm]{ZHAW.png}} 
+  \rhead{\includegraphics[height=3cm]{ZHAW.png}} 
   \renewcommand{\headrulewidth}{0.5pt} 
   \renewcommand{\contentsname}{Inhaltsverzeichnis}
 output:
