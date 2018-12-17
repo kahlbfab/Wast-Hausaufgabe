@@ -33,6 +33,57 @@ knitr::opts_chunk$set(echo = TRUE)
 # __Aufgaben__
 
 ## Aufgabe 1
+```{r, echo=F, results="hide", message=F, error=F, warning=F}
+library("tidyr")
+library(readr)
+require(dplyr, quietly = T)
+library(ggplot2)
+
+# Daten einlesen
+ugz_luftqualitaetsmessung_seit_2012 <- read_csv("ugz_luftqualitaetsmessung_seit-2012.csv")
+luftqualitaet <- as_tibble(ugz_luftqualitaetsmessung_seit_2012)
+
+# Werte und titel separieren
+titel <- slice(luftqualitaet, c(2))
+titel[1] <- "Datum"
+werte <- slice(luftqualitaet, c(-1:-5))
+
+# Tabelle nach ort auseinander nehmen
+stampfenbach <- werte %>% select(1,2:14) %>%
+  mutate(Station = "Stampfenbachstrasse")
+stampfenbach_titel <- titel %>% select(1,2:14)
+stampfenbach_titel[length(stampfenbach)] <- "Station"
+names(stampfenbach) <- stampfenbach_titel
+
+schimmel <- werte %>% select(1,15:21) %>%
+  mutate(Station = "Schimmelstrasse")
+schimmel_titel <- titel %>% select(1,15:21)
+schimmel_titel[length(schimmel)] <- "Station"
+names(schimmel) <- schimmel_titel
+
+heubeer <- werte %>% select(1,22:25) %>%
+  mutate(Station = "Heubeeribüel")
+heubeer_titel <- titel %>% select(1,22:25)
+heubeer_titel[length(heubeer)] <- "Station"
+names(heubeer) <- heubeer_titel
+
+rosengarten <- werte %>% select(1,26:30) %>%   
+  mutate(Station = "Rosengarten")
+rosengarten_titel <- titel %>% select(1,26:30)
+rosengarten_titel[length(rosengarten)] <- "Station"
+names(rosengarten) <- rosengarten_titel
+
+# Tabelle zusammensetzen
+luftqual <- bind_rows(stampfenbach, schimmel, heubeer, rosengarten)
+
+# Wetterdaten "manipulieren" MAster Stampfenbach , Slaves andere Stationen
+luftqual <- luftqual %>% group_by(Datum) %>% arrange(Datum) %>% 
+  fill(Lufttemperatur : Regendauer, .direction = "down") %>% arrange(Station)
+
+# Zahlen von character nach numeric wandeln
+luftqual[2:14] <- as_tibble(sapply(luftqual[2:14], as.numeric))
+#str(luftqual)
+```
 
 
 
@@ -43,11 +94,87 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Aufgabe 3
 
-
+\newpage
 ## Aufgabe 4
+In dieser Aufgabe ist die Variable Feinstaub (PM10) von Interesse, jeweils für die Messpunkte Stampfenbachstrasse, Schimmelstrasse und Rosengartenstrasse. Heubeeribüel hat keine Messungen des Feinstaubes und wird darum nicht berücksichtigt.  
 
+Der Tagesmittelgrenzwert vom PM10 beträgt 50ug/m^3 und darf max. 1x pro Jahr ueberschritten werden.  
+
+Daten vorbereiten:
+```{r, tidy=T}
+luftqual.PM10 <- luftqual %>% ungroup() %>%
+  select(Datum, 'Feinstaub PM10', Station) %>%  # nur relevante Kolumnen
+  filter(Station != "Heubeeribüel") %>%
+  mutate(PM10_uberschritt = `Feinstaub PM10` >= 50 )
+
+head(luftqual.PM10)
+```
+Die ersten 6 Werte sind per Zufall gerade NA. 
+
+
+### Wie oft wird der Tagesmittel-Grenzwert an welcher Station überschritten?
+```{r}
+luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.rm = T))
+```
+An der Schimmelstrasse wird der Tagesmittel-Grenzwert am häufigsten überschritten.
+\newpage  
+
+### Überschrittenen Tagesmittelgrenzwerte im Zeitlichen verlauf für alle Stationen in einer Grafik
+```{r, fig.height=4, fig.width=7}
+luftqual.PM10 %>% filter(PM10_uberschritt) %>% 
+  ggplot(aes(x=Datum, y=`Feinstaub PM10`)) + geom_point(aes(color = Station)) + ggtitle(" Überschrittene Tagesmittelgrenzwerte (PM10 > 50)")
+```
+
+Der Tagesmittelgrenzwert wird bei allen Stationen oft in den gleichen Wochen / Monaten uebertroffen. Dies ist gut moeglich, da alle Messstationen ähnlichen Einflüssen ausgesetzt sind, auf welche der Feinstaub reagiert. Wie z.B. die Jahreszeit und das Wetter.
+
+Aus der Grafik ist ersichtlich, dass die Feinstaubbelastung im Winter höher ist, als in den anderen Jahreszeiten.
+
+### In welchen Jahren und Stationen ist der Anteil der Tage mit Grenzwert uberschreitungen signifikant groesser als zufaellig
+
+Jahresmittelgrenzwert = 20ug/m^3
+
+Daten vorbereiten: Nach dem Jahr und Station gruppieren
+```{r}
+luftqual.PM10 <- luftqual.PM10 %>% mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
+  group_by(Jahr, Station) %>%
+  summarize(n = sum(PM10_uberschritt, na.rm = T))
+
+head(luftqual.PM10)
+
+# pairwise wilcox test
+# pairwise.wilcox.test(luftqual.PM10$n, luftqual.PM10$Jahr, luftqual.PM10$Station)
+```
 
 ## Aufgabe 5
+Visualisierung des Zusammenhanges zwischen der Regenmenge und der Feinstaubkonzentration pro Station. 
+```{r, fig.height=4,fig.width=7, warning=F}
+ordered_PM10 <- select(luftqual, Datum, `Feinstaub PM10`, Station, Regendauer)
+  
+# Plot
+ggplot(ordered_PM10, aes(x= Regendauer, y= `Feinstaub PM10`)) +
+  geom_point(aes(color = Station),  alpha = 0.5, size = 0.8)
+```
+
+Auf der Grafik ist folgendes Verhalten zu erkennen: Die Feinstaubkonzentration ist tendenziell höher wenn es nicht Regnet, als wenn es Regnet. Um so länger es Regnet, nimmt dieser Effekt noch zu. 
+\newpage  
+
+Mit einem Statistischen Test soll überprüft werden, ob ein Zusammenhang besteht. Es wurde der t-Test verwendet, da die Mittelwerte der Feinstaubkonzentration normalverteilt aber die Varianz nicht bekannt sind. 
+
+h0: mu_Feinstaub_regen = mu_Feinstaub_keinregen  
+h1: mu_Feinstaub_regen < mu_Feinstaub_keinregen
+```{r}
+PM10_test <- ordered_PM10 %>% group_by(Datum) %>%
+  summarise(PM10_mean = mean(`Feinstaub PM10`, na.rm = T) ,
+            Regendauer = Regendauer[1])
+
+# tTest
+t.test(x = PM10_test$PM10_mean[PM10_test$Regendauer != 0], 
+       y = PM10_test$PM10_mean[PM10_test$Regendauer == 0],
+       conf.level = 0.99, alternative = "less")
+```
+p < 0.01 --> h0 verwerfen  
+
+Die Nullhypothese wird klar verworfen. Das heisst, die Feinstaubkonzentration ist an Tagen mit Regen signifikant tiefer als an Tagen mit Regen. 
 
 
 ## Aufgabe 6
