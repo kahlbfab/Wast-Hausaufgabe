@@ -17,36 +17,35 @@ werte <- slice(luftqualitaet, c(-1:-5))
 
 # Tabelle nach ort auseinander nehmen
 stampfenbach <- werte %>% select(1,2:14) %>%
-  mutate(station = "Stampfenbachstrasse")
+  mutate(Station = "Stampfenbachstrasse")
 stampfenbach_titel <- titel %>% select(1,2:14)
-stampfenbach_titel[15] <- "Station"
+stampfenbach_titel[length(stampfenbach)] <- "Station"
 names(stampfenbach) <- stampfenbach_titel
 
-schimmel <- werte %>% select(1,15:22) %>%
-  mutate(station = "Schimmelstrasse")
-schimmel_titel <- titel %>% select(1,15:22)
-schimmel_titel[10] <- "Station"
+schimmel <- werte %>% select(1,15:21) %>%
+  mutate(Station = "Schimmelstrasse")
+schimmel_titel <- titel %>% select(1,15:21)
+schimmel_titel[length(schimmel)] <- "Station"
 names(schimmel) <- schimmel_titel
 
-heubeer <- werte %>% select(1,23:26) %>%
-  mutate(station = "Heubeeribüel")
-heubeer_titel <- titel %>% select(1,23:26)
-heubeer_titel[6] <- "Station"
+heubeer <- werte %>% select(1,22:25) %>%
+  mutate(Station = "Heubeeribüel")
+heubeer_titel <- titel %>% select(1,22:25)
+heubeer_titel[length(heubeer)] <- "Station"
 names(heubeer) <- heubeer_titel
 
-rosengarten <- werte %>% select(1,27:30) %>%   
-  mutate(station = "Rosengarten")
-rosengarten_titel <- titel %>% select(1,27:30)
-rosengarten_titel[6] <- "Station"
+rosengarten <- werte %>% select(1,26:30) %>%   
+  mutate(Station = "Rosengarten")
+rosengarten_titel <- titel %>% select(1,26:30)
+rosengarten_titel[length(rosengarten)] <- "Station"
 names(rosengarten) <- rosengarten_titel
 
 # Tabelle zusammensetzen
 luftqual <- bind_rows(stampfenbach, schimmel, heubeer, rosengarten)
-str(luftqual)
 
 # Wetterdaten "manipulieren" MAster Stampfenbach , Slaves andere Stationen
-luftqual <- luftqual %>% group_by(Datum) %>% arrange(Datum) %>% fill(Lufttemperatur : Regendauer, .direction = "down") %>% arrange(Station)
-View(luftqual)
+luftqual <- luftqual %>% group_by(Datum) %>% arrange(Datum) %>% 
+  fill(Lufttemperatur : Regendauer, .direction = "down") %>% arrange(Station)
 
 # Zahlen von character nach numeric wandeln
 luftqual[2:14] <- as_tibble(sapply(luftqual[2:14], as.numeric))
@@ -57,15 +56,25 @@ View(luftqual)
 
 #### Aufgabe 2 ####
 # mit ggplot
-gather(luftqual, key = variable, value = value, c(2,3,4,6,7,8)) %>% 
-  ggplot(aes(x = Datum, y = value, group = variable)) +
-  geom_line(aes(color = variable)) +
-  facet_wrap(~Station)
+# gather(luftqual, key = variable, value = value, c(2,3,4,6,7,8)) %>%
+#   ggplot(aes(x = Datum, y = value, group = variable)) +
+#   geom_line(aes(color = variable)) +
+#   facet_wrap(~Station)
+g1 <- ggplot(luftqual, aes(x=Datum, y=Schwefeldioxid)) + 
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25)
+g2 <- ggplot(luftqual, aes(x=Datum, y=Kohlenmonoxid)) + 
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25)
+g3 <- ggplot(luftqual, aes(x=Datum, y=Stickstoffmonoxid)) + 
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25)
+g4 <- ggplot(luftqual, aes(x=Datum, y=Stickstoffdioxid)) + 
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25)
+g5 <- ggplot(luftqual, aes(x=Datum, y=`Feinstaub PM10`)) + 
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25)
+g6 <- ggplot(luftqual, aes(x=Datum, y=`Ozon, höchstes Stundenmittel`)) + 
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25)
 
-# mit ggally #falscher Ansatz
-# library(GGally)
-# ggpairs(luftqual, mapping = ggplot2::aes(color = Station), columns = c(2,3,4,6,7,8),
-#         upper =list(continuous = wrap("points", alpha = 0.2)))
+library(ggpubr)
+ggpubr::ggarrange(g1,g2,g3,g4,g5,g6, ncol = 2, nrow = 3, common.legend = TRUE, legend="bottom")
 
 
 #### Aufgabe 3 ####
@@ -75,11 +84,11 @@ par(mar= c(4,2,2,2))
 
 # Alle Nan Werte zu NA`s ersetzen
 luftqual.A3 <- rapply(luftqual, f=function(x) ifelse(is.nan(x),NA,x), how="replace")
-View(luftqual.A3)
+
 
 # Neue Namen für Header, ansonsten kein Platz für Plot
 names(luftqual.A3) <- c("Datum", "SO2", "CO", "O3_max_h1", "O3_nb_h1>120", "NO2", "NO", "PM10", "T", "Hr", "p", "WVS", "StrGlo", "RainDur", "Station")
-View(luftqual.A3)
+
 
 # Anteil von NA in Variable und Kombinationen von Varibablen mittels Package VIM
 aggr_plot <- aggr(luftqual.A3, col=c('navyblue','red'), 
@@ -134,7 +143,7 @@ luftqual.PM10 %>% mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
 # h0: mu =  
 # h1:
 #t.test(daten, mu = 8.2, altern = "two.sided")
-
+# Montecarlo permutations test
 
 #### Aufgabe 5 ####
 
@@ -168,8 +177,6 @@ bev_bef <- read_csv("bevoelkerungsbefragung_2015_stadtentwicklung_zuerich.csv")
 adressen <- read_csv("adressen.csv")
 #fragen <- read_csv("interviewfragen_bvb_2015_stadtentwicklung_zuerich.csv")
 attribute <- read_csv("attributbeschreibung_bvb_2015_stadtentwicklung_zuerich.csv")
-View(bev_bef)
-View(adressen)
 
 # Welche Frage ist gesucht...
 library(stringr)
@@ -216,7 +223,7 @@ boxplot(kreis_rosen$f36105Sort, kreis_schimmel$f36105Sort, kreis_stampfen$f36105
 
 
 # testen ??? t.test oder anderer ???
-t.test(x = kreis_rosen$f36105Sort, y = kreis_schimmel$f36105Sort,
+wilcox.test(x = kreis_rosen$f36105Sort, y = kreis_schimmel$f36105Sort,
        conf.level = 0.99, alternative = "two.sided")
 # nicht gleich zufrieden
 t.test(x = kreis_rosen$f36105Sort, y = kreis_stampfen$f36105Sort,
