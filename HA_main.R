@@ -60,21 +60,31 @@ View(luftqual)
 #   ggplot(aes(x = Datum, y = value, group = variable)) +
 #   geom_line(aes(color = variable)) +
 #   facet_wrap(~Station)
+
+#legend.title=element_text(size=10), 
+#legend.text=element_text(size=9))
+
+
+# theme um die legend size anzupassen
+t <- theme(legend.title=element_text(size=20), legend.text=element_text(size=20))
+
+
 g1 <- ggplot(luftqual, aes(x=Datum, y=Schwefeldioxid)) + 
-  geom_line(aes(color=Station), alpha = 0.75, size = 0.25)
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25) + t
 g2 <- ggplot(luftqual, aes(x=Datum, y=Kohlenmonoxid)) + 
-  geom_line(aes(color=Station), alpha = 0.75, size = 0.25)
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25) + t
 g3 <- ggplot(luftqual, aes(x=Datum, y=Stickstoffmonoxid)) + 
-  geom_line(aes(color=Station), alpha = 0.75, size = 0.25)
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25) + t
 g4 <- ggplot(luftqual, aes(x=Datum, y=Stickstoffdioxid)) + 
-  geom_line(aes(color=Station), alpha = 0.75, size = 0.25)
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25) + t
 g5 <- ggplot(luftqual, aes(x=Datum, y=`Feinstaub PM10`)) + 
-  geom_line(aes(color=Station), alpha = 0.75, size = 0.25)
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25) +t
 g6 <- ggplot(luftqual, aes(x=Datum, y=`Ozon, höchstes Stundenmittel`)) + 
-  geom_line(aes(color=Station), alpha = 0.75, size = 0.25)
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25) + t
 
 library(ggpubr)
-ggpubr::ggarrange(g1,g2,g3,g4,g5,g6, ncol = 2, nrow = 3, common.legend = TRUE, legend="bottom")
+ggpubr::ggarrange(g1,g2,g3,g4,g5,g6, ncol = 2, nrow = 3, common.legend = TRUE,
+                  legend="bottom")
 
 
 #### Aufgabe 3 ####
@@ -92,7 +102,9 @@ names(luftqual.A3) <- c("Datum", "SO2", "CO", "O3_max_h1", "O3_nb_h1>120", "NO2"
 
 # Anteil von NA in Variable und Kombinationen von Varibablen mittels Package VIM
 aggr_plot <- aggr(luftqual.A3, col=c('navyblue','red'), 
-                  numbers=TRUE, sortVars=TRUE, labels=names(luftqual.A3), cex.axis=0.7, gap=0.5, ylab=c("Histogram of missing data","Pattern"), cex.lab = 1)
+                  numbers=TRUE, sortVars=TRUE, labels=names(luftqual.A3),
+                  cex.axis=0.7, gap=0.5,
+                  ylab=c("Histogram of missing data","Pattern"), cex.lab = 1)
 
 # Anzahl NA`s im Datensatz
 sum(is.na(luftqual.A3))
@@ -109,13 +121,10 @@ sum(is.na(luftqual.A3))
 # Jahresmittelgrenzwert: 20ug/m^3
 # Tagesmittelgrenzwert: 50ug/m^3, darf max. 1x pro Jahr ueberschritten werden
 
-# brauche die Daten in diesem Format. Was ist falsch mit den anderen?
-luftqual.A4 <- bind_rows(stampfenbach, schimmel, heubeer, rosengarten)
-luftqual.A4[2:14] <- as_tibble(sapply(luftqual.A4[2:14], as.numeric))
-
-# uberschittene Tagesmittelgrenzwerte
-luftqual.PM10 <- luftqual.A4 %>% select(Datum, 'Feinstaub PM10', Station) %>%
-  mutate(PM10_uberschritt = luftqual.A4$`Feinstaub PM10` >= 50 )
+luftqual.PM10 <- luftqual %>% ungroup() %>%
+  select(Datum, 'Feinstaub PM10', Station) %>%
+  filter(Station != "Heubeeribüel") %>%         # nicht relevant da keine Messwerte
+  mutate(PM10_uberschritt = `Feinstaub PM10` >= 50 )
 
 #1 wie oft wird der Tagesmittel-Grenzwert an welcher Station ueberschritten?
 luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.rm = T))
@@ -127,17 +136,20 @@ luftqual.PM10 %>% filter(PM10_uberschritt) %>%
 # Der Tagesmittelgrenzwert wird bei allen Stationen oft an den gleichen Tagen uebertroffen.
 # Dies ist gut moeglich da alle Messstatinen unter aehnlichen Einfluessen auf den Feinstaub reagieren
 # wie zb. das Wetter.
+# Im Winter eindeutig mehr Feinstaubbelastung
 
 #3 In welchen Jahren und Stationen ist der Anteil der Tage mit Grenzwert uberschreitungen
 # signifikant groesser als zufaellig
 
 # Jahresmittelgrenzwert = 20ug/m^3
 
-
 # Datum nur das Jahr interessant
-luftqual.PM10 %>% mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
+luftqual.PM10 <- luftqual.PM10 %>% mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
   group_by(Jahr, Station) %>%
   summarize(n = sum(PM10_uberschritt, na.rm = T))
+
+# pairwise wilcox test
+# pairwise.wilcox.test(luftqual.PM10$n, luftqual.PM10$Jahr, luftqual.PM10$Station)
 
 # t test: 
 # h0: mu =  
@@ -166,9 +178,9 @@ PM10_test <- ordered_PM10 %>% group_by(Datum) %>%
             Regendauer = Regendauer[1])
 
 # tTest
-t.test(x = PM10_test$PM10_mean[PM10_test$Regendauer == 0], 
-       y = PM10_test$PM10_mean[PM10_test$Regendauer != 0],
-       conf.level = 0.99, alternative = "greater")
+t.test(x = PM10_test$PM10_mean[PM10_test$Regendauer != 0], 
+       y = PM10_test$PM10_mean[PM10_test$Regendauer == 0],
+       conf.level = 0.99, alternative = "less")
 # p < 0.01 --> h0 verwerfen 
 
 
@@ -222,13 +234,22 @@ boxplot(kreis_rosen$f36105Sort, kreis_schimmel$f36105Sort, kreis_stampfen$f36105
 # => Schimmelstrasse hat höheren Feinstaub durchschnitt als die anderen
 
 
-# testen ??? t.test oder anderer ???
+# test
 wilcox.test(x = kreis_rosen$f36105Sort, y = kreis_schimmel$f36105Sort,
        conf.level = 0.99, alternative = "two.sided")
+# h0 abgelehnt
 # nicht gleich zufrieden
-t.test(x = kreis_rosen$f36105Sort, y = kreis_stampfen$f36105Sort,
+
+wilcox.test(x = kreis_rosen$f36105Sort, y = kreis_stampfen$f36105Sort,
        conf.level = 0.99, alternative = "two.sided")
+# h0 bleibt
 # gleich zufrieden
-t.test(x = kreis_schimmel$f36105Sort, y = kreis_stampfen$f36105Sort,
+
+wilcox.test(x = kreis_schimmel$f36105Sort, y = kreis_stampfen$f36105Sort,
        conf.level = 0.99, alternative = "two.sided")
+# h0 abgelehnt
 # nicht gleich zufrieden
+
+
+
+# Schimmelstrasse sind unzufriedener und das mittel der Feinstaubbeobachtung ist auch hoeher. 
