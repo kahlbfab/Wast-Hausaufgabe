@@ -194,7 +194,6 @@ bev_bef_gruen <- select(bev_bef,
 bev_bef_gruen$f36105Sort[bev_bef_gruen$f36105Sort < 3] <- 3
 
 # entfernen von weiss nicht 98 und keine Angabe 99
-X[ ! X$Variable1 %in% c(11,12), ]
 bev_bef_gruen <- bev_bef_gruen[!bev_bef_gruen$f36105Sort %in% c(98,99),]
 
 # Kreise sortieren
