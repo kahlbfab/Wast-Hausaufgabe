@@ -1,21 +1,24 @@
 # Hausaufgabe
 #### Aufgabe 1 ####
-
+# Alle librarys einlesen
 library("tidyr")
 library(readr)
 require(dplyr, quietly = T)
 library(ggplot2)
+library(ggpubr)
+library(VIM)
+library(stringr)
 
 # Daten einlesen
 ugz_luftqualitaetsmessung_seit_2012 <- read_csv("ugz_luftqualitaetsmessung_seit-2012.csv")
 luftqualitaet <- as_tibble(ugz_luftqualitaetsmessung_seit_2012)
 
-# Werte und titel separieren
+# Werte und Titel separieren
 titel <- slice(luftqualitaet, c(2))
 titel[1] <- "Datum"
 werte <- slice(luftqualitaet, c(-1:-5))
 
-# Tabelle nach ort auseinander nehmen
+# Tabelle nach Ort aufteilen
 stampfenbach <- werte %>% select(1,2:14) %>%
   mutate(Station = "Stampfenbachstrasse")
 stampfenbach_titel <- titel %>% select(1,2:14)
@@ -40,10 +43,10 @@ rosengarten_titel <- titel %>% select(1,26:30)
 rosengarten_titel[length(rosengarten)] <- "Station"
 names(rosengarten) <- rosengarten_titel
 
-# Tabelle zusammensetzen
+# Tabellen zusammensetzen
 luftqual <- bind_rows(stampfenbach, schimmel, heubeer, rosengarten)
 
-# Wetterdaten "manipulieren" MAster Stampfenbach , Slaves andere Stationen
+# Wetterdaten "manipulieren" Master Stampfenbach , Slaves andere Stationen
 luftqual <- luftqual %>% group_by(Datum) %>% arrange(Datum) %>% 
   fill(Lufttemperatur : Regendauer, .direction = "down") %>% arrange(Station)
 
@@ -55,20 +58,10 @@ View(luftqual)
 
 
 #### Aufgabe 2 ####
-# mit ggplot
-# gather(luftqual, key = variable, value = value, c(2,3,4,6,7,8)) %>%
-#   ggplot(aes(x = Datum, y = value, group = variable)) +
-#   geom_line(aes(color = variable)) +
-#   facet_wrap(~Station)
-
-#legend.title=element_text(size=10), 
-#legend.text=element_text(size=9))
-
-
-# theme um die legend size anzupassen
+# Theme um die Legenden grösse anzupassen
 t <- theme(legend.title=element_text(size=20), legend.text=element_text(size=20))
 
-
+# Plots pro Variable
 g1 <- ggplot(luftqual, aes(x=Datum, y=Schwefeldioxid)) + 
   geom_line(aes(color=Station), alpha = 0.75, size = 0.25) + t
 g2 <- ggplot(luftqual, aes(x=Datum, y=Kohlenmonoxid)) + 
@@ -82,25 +75,21 @@ g5 <- ggplot(luftqual, aes(x=Datum, y=`Feinstaub PM10`)) +
 g6 <- ggplot(luftqual, aes(x=Datum, y=`Ozon, höchstes Stundenmittel`)) + 
   geom_line(aes(color=Station), alpha = 0.75, size = 0.25) + t
 
-library(ggpubr)
-ggpubr::ggarrange(g1,g2,g3,g4,g5,g6, ncol = 2, nrow = 3, common.legend = TRUE,
-                  legend="bottom")
+# Zusammenfügen der Plots
+ggpubr::ggarrange(g1,g2,g3,g4,g5,g6, ncol = 2, nrow = 3, common.legend = TRUE, legend="bottom")
+
 
 
 #### Aufgabe 3 ####
-library(VIM)
-par(mar= c(4,2,2,2))
-
-
-# Alle Nan Werte zu NA`s ersetzen
+# Alle NAN Werte durch NA`s ersetzen
 luftqual.A3 <- rapply(luftqual, f=function(x) ifelse(is.nan(x),NA,x), how="replace")
 
-
 # Neue Namen für Header, ansonsten kein Platz für Plot
-names(luftqual.A3) <- c("Datum", "SO2", "CO", "O3_max_h1", "O3_nb_h1>120", "NO2", "NO", "PM10", "T", "Hr", "p", "WVS", "StrGlo", "RainDur", "Station")
-
+names(luftqual.A3) <- c("Datum", "SO2", "CO", "O3_max_h1", "O3_nb_h1>120",
+                        "NO2", "NO", "PM10", "T", "Hr", "p", "WVS", "StrGlo", "RainDur", "Station")
 
 # Anteil von NA in Variable und Kombinationen von Varibablen mittels Package VIM
+par(mar= c(4,2,2,2))
 aggr_plot <- aggr(luftqual.A3, col=c('navyblue','red'), 
                   numbers=TRUE, sortVars=TRUE, labels=names(luftqual.A3),
                   cex.axis=0.7, gap=0.5,
@@ -112,24 +101,16 @@ sum(is.na(luftqual.A3))
 
 
 #### Aufgabe 4 ####
-
-# Feinstaub (PM10) jeweils fuer die Messpunkte 
-# Stampfenbachstrasse, Schimmelstrasse, Rosengartenstrasse
-# !! Heubeeribüel hat keine Messung von PM10 
-
-# PM10 
-# Jahresmittelgrenzwert: 20ug/m^3
-# Tagesmittelgrenzwert: 50ug/m^3, darf max. 1x pro Jahr ueberschritten werden
-
+# Daten umformen für alle Feinstaubwerte über 50
 luftqual.PM10 <- luftqual %>% ungroup() %>%
   select(Datum, 'Feinstaub PM10', Station) %>%
   filter(Station != "Heubeeribüel") %>%         # nicht relevant da keine Messwerte
   mutate(PM10_uberschritt = `Feinstaub PM10` >= 50 )
 
-#1 wie oft wird der Tagesmittel-Grenzwert an welcher Station ueberschritten?
+# Anzahl ueberschrittener Tagesmittel-Grenzwerte pro Station
 luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.rm = T))
 
-#2 ueberschrittenen Tagesmittelgrenzwerte fuer alle Stationen ueber die Zeit in einer Grafik
+# ueberschrittenen Tagesmittelgrenzwerte fuer alle Stationen ueber die Zeit in einer Grafik
 luftqual.PM10 %>% filter(PM10_uberschritt) %>% 
   ggplot(aes(x=Datum, y=`Feinstaub PM10`)) + geom_point(aes(color = Station)) + ggtitle("PM10 > 50")
 
@@ -138,13 +119,14 @@ luftqual.PM10 %>% filter(PM10_uberschritt) %>%
 # wie zb. das Wetter.
 # Im Winter eindeutig mehr Feinstaubbelastung
 
+
 #3 In welchen Jahren und Stationen ist der Anteil der Tage mit Grenzwert uberschreitungen
 # signifikant groesser als zufaellig
 
 # Jahresmittelgrenzwert = 20ug/m^3
 
 # Datum nur das Jahr interessant
-luftqual.PM10 <- luftqual.PM10 %>% mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
+luftqual.PM10.2 <- luftqual.PM10 %>% mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
   group_by(Jahr, Station) %>%
   summarize(n = sum(PM10_uberschritt, na.rm = T))
 
@@ -157,13 +139,10 @@ luftqual.PM10 <- luftqual.PM10 %>% mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)
 #t.test(daten, mu = 8.2, altern = "two.sided")
 # Montecarlo permutations test
 
-#### Aufgabe 5 ####
 
-# Regendauer ~ PM10 pro Station 
-# select(luftqual, Datum, Regendauer)
-# PM10_temp <- luftqual %>% select(Datum,`Feinstaub PM10`, Station) %>%
-  
-# regendauer zu allen Stationen hinzufuegen mit leftjoin
+
+#### Aufgabe 5 ####
+# Regendauer zu allen Stationen hinzufuegen
 ordered_PM10 <- left_join(x = select(luftqual, Datum,`Feinstaub PM10`, Station),
           y = filter(luftqual, Station == "Stampfenbachstrasse") %>% select( Datum, Regendauer),
           by = "Datum")
@@ -177,35 +156,34 @@ PM10_test <- ordered_PM10 %>% group_by(Datum) %>%
   summarise(PM10_mean = mean(`Feinstaub PM10`, na.rm = T) ,
             Regendauer = Regendauer[1])
 
-# tTest
+# tTest ob zusammenhang besteht zwischen Regen und Feinstaub
+# h0: Feinstaubbelastung an Tagen mit und ohne Regen gleich hoch
 t.test(x = PM10_test$PM10_mean[PM10_test$Regendauer != 0], 
        y = PM10_test$PM10_mean[PM10_test$Regendauer == 0],
        conf.level = 0.99, alternative = "less")
 # p < 0.01 --> h0 verwerfen 
+# An Tagen mit Regen ist die Feinstaubbelastung kleiner als an Tagen ohne Regen
 
 
-##### Aufgabe 6#################
+
+#### Aufgabe 6 ####
+# Daten einlesen
 bev_bef <- read_csv("bevoelkerungsbefragung_2015_stadtentwicklung_zuerich.csv")
 adressen <- read_csv("adressen.csv")
-#fragen <- read_csv("interviewfragen_bvb_2015_stadtentwicklung_zuerich.csv")
 attribute <- read_csv("attributbeschreibung_bvb_2015_stadtentwicklung_zuerich.csv")
 
 # Welche Frage ist gesucht...
-library(stringr)
 filter(attribute, str_detect(feldbeschreibung, "Grün"))
 attribute$feldbeschreibung[attribute$technischerfeldname == "f23003Lang"]
 attribute$feldbeschreibung[attribute$technischerfeldname == "f26050Lang"]
 attribute$feldbeschreibung[attribute$technischerfeldname == "f36105Lang"] #trifft am ehsten zu
-# => f36105
+# folgende Frage ist gesucht: f36105
 
-# Suche nach Quartier
-unique(luftqual$Station)
+# Suche nach Quartier und Kreis
 filter(adressen, str_detect(lokalisationsname, "Stampfenbachstrasse")) # => Kreis 1&6 => 1,5
 filter(adressen, str_detect(lokalisationsname, "Schimmelstrasse")) # => Kreis 3&4 => 2,3
 filter(adressen, str_detect(lokalisationsname, "Rosengarten")) # => Kreis 10 => 9
 #Heuberribüel hat keine Feinstaubmessung
-#filter(adressen, str_detect(lokalisationsname, "Heubeeri")) # => Kreis 7 => 6
-unique(bev_bef$stadtkreiseLang)
 
 # Noten 1-3 neu 3
 bev_bef_gruen <- select(bev_bef, 
@@ -215,7 +193,7 @@ bev_bef_gruen$f36105Sort[bev_bef_gruen$f36105Sort < 3] <- 3
 # entfernen von weiss nicht 98 und keine Angabe 99
 bev_bef_gruen <- bev_bef_gruen[!bev_bef_gruen$f36105Sort %in% c(98,99),]
 
-# Kreise sortieren
+# Kreise sortieren und zuweisen
 kreis_stampfen <- filter(bev_bef_gruen, stadtkreiseSort %in% c(1,5))
 kreis_schimmel <- filter(bev_bef_gruen, stadtkreiseSort %in% c(2,3))
 kreis_rosen <- filter(bev_bef_gruen, stadtkreiseSort == 9)
@@ -234,7 +212,9 @@ boxplot(kreis_rosen$f36105Sort, kreis_schimmel$f36105Sort, kreis_stampfen$f36105
 # => Schimmelstrasse hat höheren Feinstaub durchschnitt als die anderen
 
 
-# test
+# wilcox.test ob die Befragten gleich zufrieden sind
+# h0: Es gibt keinen Zufriedenheitsunterschied zwischen den Stadtkreisen 
+
 wilcox.test(x = kreis_rosen$f36105Sort, y = kreis_schimmel$f36105Sort,
        conf.level = 0.99, alternative = "two.sided")
 # h0 abgelehnt
@@ -249,7 +229,5 @@ wilcox.test(x = kreis_schimmel$f36105Sort, y = kreis_stampfen$f36105Sort,
        conf.level = 0.99, alternative = "two.sided")
 # h0 abgelehnt
 # nicht gleich zufrieden
-
-
 
 # Schimmelstrasse sind unzufriedener und das mittel der Feinstaubbeobachtung ist auch hoeher. 
