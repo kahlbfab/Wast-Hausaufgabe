@@ -128,25 +128,28 @@ luftqual.PM10 %>% filter(PM10_uberschritt) %>%
 # Jahresmittelgrenzwert = 20ug/m^3
 
 
-# Datum nur das Jahr interessant 
-# !!! NA's werden als 0 angezeigt
+# Datum nur das Jahr interessant
 luftqual.PM10.2 <- luftqual.PM10 %>% 
   mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
   drop_na() %>%
   group_by(Jahr, Station) %>%
   summarize(n = sum(PM10_uberschritt, na.rm = T))
 
-# Plot dazu
-# !!! NA's werden als 0 angezeigt
-ggplot(luftqual.PM10.2, aes(x = Jahr, y = n, color = Station)) + 
-  geom_col(aes(fill = Station),position = "dodge")
-
 # poisson test: 
 # h0: keine überschreitungen pro Jahr 
-# h1: mehr als 0 überschreitungen pro Jahr
+# h1: mehr als 1 überschreitungen pro Jahr
+fun_A4 <- function(anzahl){
+  testen <- binom.test(x = anzahl, n = 365, p = 1/365, alternative = "greater", conf.level = 0.99)
+  return(ifelse(testen$p.value<0.01, T, F))
+}
+luftqual.PM10.2$h1 <- apply(luftqual.PM10.2[,3], 1, fun_A4) 
+# h0 wird ab 5 verworfen
 
+# Plot dazu
+ggplot(luftqual.PM10.2, aes(x = Jahr, y = n, fill = Station)) + 
+  geom_col(aes(), position = "dodge") 
+  #+ geom_text(aes(label = luftqual.PM10.2$h1), color = "black",  size=4, position = position_dodge2(width = 1), angle = 0, hjust = .5, vjust = -.1)
 
-binom.test(x = 5, n = 365, p = 1/365, alternative = "greater", conf.level = 0.99)
 
 
 #### Aufgabe 5 ####
