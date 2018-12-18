@@ -1,7 +1,7 @@
 ---
 title: __Hausaufgabe Wast3__
 author: "J.Brändli, T.Haas, F.Kahlbacher"
-date: "17 Dezember 2018"
+date: "17. Dezember 2018"
 header-includes: 
   \usepackage{fancyhdr}
   \addtolength{\headheight}{1.5cm} 
