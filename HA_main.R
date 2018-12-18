@@ -128,7 +128,9 @@ luftqual.PM10 %>% filter(PM10_uberschritt) %>%
 
 # Datum nur das Jahr interessant 
 # !!! NA's werden als 0 angezeigt
-luftqual.PM10.2 <- luftqual.PM10 %>% mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
+luftqual.PM10.2 <- luftqual.PM10 %>% 
+  mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
+  drop_na() %>%
   group_by(Jahr, Station) %>%
   summarize(n = sum(PM10_uberschritt, na.rm = T))
 
@@ -137,15 +139,12 @@ luftqual.PM10.2 <- luftqual.PM10 %>% mutate(Jahr = strtrim(luftqual.PM10$Datum, 
 ggplot(luftqual.PM10.2, aes(x = Jahr, y = n, color = Station)) + 
   geom_col(aes(fill = Station),position = "dodge")
 
-# pairwise wilcox test
-# pairwise.wilcox.test(luftqual.PM10$n, luftqual.PM10$Jahr, luftqual.PM10$Station)
+# poisson test: 
+# h0: keine überschreitungen pro Jahr 
+# h1: mehr als 0 überschreitungen pro Jahr
 
-# t test: 
-# h0: mu =  
-# h1:
-#t.test(daten, mu = 8.2, altern = "two.sided")
-# Montecarlo permutations test
 
+binom.test(x = 5, n = 365, p = 1/365, alternative = "greater", conf.level = 0.99)
 
 
 #### Aufgabe 5 ####
