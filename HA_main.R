@@ -89,7 +89,7 @@ names(luftqual.A3) <- c("Datum", "SO2", "CO", "O3_max_h1", "O3_nb_h1>120",
                         "NO2", "NO", "PM10", "T", "Hr", "p", "WVS", "StrGlo", "RainDur", "Station")
 
 # Anteil von NA in Variable und Kombinationen von Varibablen mittels Package VIM
-par(mar= c(4,2,2,2))
+par(mar= c(4,2,2,6))
 aggr_plot <- aggr(luftqual.A3, col=c('navyblue','red'), 
                   numbers=TRUE, sortVars=TRUE, labels=names(luftqual.A3),
                   cex.axis=0.7, gap=0.5,

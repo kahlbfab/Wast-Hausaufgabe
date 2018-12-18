@@ -38,7 +38,7 @@ library(stringr)
 ```
 
 ## Aufgabe 1
-Der Datensatz wird mit dem R-Befehl _read_csv()_ eingelesen. Die eingelesenen Daten werden nun gewünscht aufbereitet. Für die Aufbereitung wird unteranderem das R-Packages _dplyr_ verwendet, deshalb muss der eingelesene Datensatz in ein Tibble umgewandelt werden.
+Der Datensatz wird mit dem R-Befehl _read_csv()_ eingelesen. Die eingelesenen Daten werden nun wie gewünscht aufbereitet. Für die Aufbereitung wird unteranderem das R-Packages _dplyr_ verwendet, deshalb muss der eingelesene Datensatz in ein Tibble umgewandelt werden.
 
 ```{r, results="hide", message=F, error=F, warning=F}
 ugz_luftqualitaetsmessung_seit_2012 <- read_csv("ugz_luftqualitaetsmessung_seit-2012.csv")
@@ -47,7 +47,7 @@ luftqualitaet <- as_tibble(ugz_luftqualitaetsmessung_seit_2012)
 
 
 
-Als nächstes werden werden die Werte und der Header separiert und in neue Variablen abgespeichert. Dieser Vorgang ist nötig, da der orginale Datensatz mehrere Header-Zeilen (siehe Figure 1) enthält, die nicht benötigt werden. Zudem vereinfacht dieser Schritt, die Daten in gewünschter Form aufzubereiten.
+Als nächstes werden die Werte und der Header separiert und in neue Variablen abgespeichert. Dieser Vorgang ist nötig, da der orginale Datensatz mehrere Header-Zeilen (siehe Figure 1) enthält, die nicht benötigt werden. Zudem vereinfacht dieser Schritt, die Daten in gewünschter Form aufzubereiten.
 
 <center>
 
@@ -62,18 +62,6 @@ werte <- slice(luftqualitaet, c(-1:-5))
 ```
 
 \newpage
-
-
-Der Datensatz enhält Luftqualitätsmessungen von vier verschiedenen Messstationen in Zürich welche wie folgt umbennant werden:
-
-Originalname Messstation  |  Geänderter Name 
-------------------------- | ----------------------
-Stampfenbachstrasse       |  stampfenbach
-Schimmelstrasse           |  schimmel
-Heubeeribüel              |  heubeer
-Rosengarten               |  rosengarten
-
-
 
 Als folgendes Beispiel wird die Aufbereitung des Datensatzes in die gewünschte Form anhand der Stampfenbachstrasse aufgezeigt. Analog dazu sind die anderen drei Stationen aufbereitet worden.
 Zuerst werden alle Spalten, die zur jeweiligen Strasse gehören (hier Stampfenbachstrasse) von der Variable „werte“ separiert und in einer neuen Variable (hier stampfenbach) gespeichert (Hashtag 1). Als nächstes wird einen neuen Variablennamen (hier Station) erstellt. Unter diesem Variablennamen wird für jede der entsprechende Stationsname (hier Stampfenbachstrasse) als String hinzugefügt (Hashtag 2). 
@@ -118,7 +106,7 @@ In diesem Schritt werden alle vier aufbereiteten Stationen zusammengefügt und i
 luftqual <- bind_rows(stampfenbach, schimmel, heubeer, rosengarten)
 ```
 
-Da das Wetter sich nicht gross zwischen den vier Stationen unterscheidet und es keine näher gelegenen metrologischen Stationen gibt, werden die Wetterdaten der Station Stampfenbachstrasse als Wetterinformation gültig für alle Feinstaubmessstationen. Im untenstehenden Code wird „luftqual“ nach Datum sortiert und angeordnet und dann die Wetterdaten aufgefüllt für die anderen Stationen. Dabei aggiert Stampfenbach als Master.
+Da das Wetter sich nicht gross zwischen den vier Stationen unterscheidet und es keine näher gelegenen metrologischen Stationen gibt, werden die Wetterdaten der Station Stampfenbachstrasse als Wetterinformation gültig für alle Feinstaubmessstationen. 
 ```{r, echo=T, results="hide", message=F, error=F, warning=F}
 luftqual <- luftqual %>% group_by(Datum) %>% arrange(Datum) %>% 
   fill(Lufttemperatur : Regendauer, .direction = "down") %>% arrange(Station)
