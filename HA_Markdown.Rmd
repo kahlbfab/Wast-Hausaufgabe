@@ -1,6 +1,6 @@
 ---
 title: __Hausaufgabe Wast3__
-author: "J.Brändli, F.Kahlbacher, T.Haas"
+author: "J.Brändli, T.Haas, F.Kahlbacher"
 date: "17 Dezember 2018"
 header-includes: 
   \usepackage{fancyhdr}
@@ -18,73 +18,120 @@ output:
   html_document: default
   word_document: default
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+\newpage
 
 # Einleitung
-
-\newpage 
-
-
+In diesem Bericht werden aktuelle Luftqualitätsmessungen vom Umwelt- und Gesundheitsschutz der Stadt Zürich untersucht. Der Datensatz, welche von der Datenbank OSTLUFT stammt, enthält unteranderem folgende Messgrössen: Schwefeldioxid (SO2), Kohlenmonoxid (CO), Stickstoffdioxid (NO2), Stickstoffmonoxid (NO), Ozonmengen (O3) und meteorolgische Daten, sowie Feinstaubmessungen (PM10). Vor allem die Feinstaubmessungen sind von Relevanz. Der Feinstaub kann tief in die Lunge eindringen und so schweriwiegende Auswirkungen auf die Gesunheit des Menschen haben. 
+Die Messgrössen stammen von den Wetterstationen an der Stampfenbachstrasse, Schimmelstrasse, Heubeeribüelstrasse und der Rosengartenstrasse. 
 
 
 # __Aufgaben__
-
-## Aufgabe 1
 ```{r, echo=F, results="hide", message=F, error=F, warning=F}
+# Alle librarys einlesen
 library("tidyr")
 library(readr)
 require(dplyr, quietly = T)
 library(ggplot2)
+library(ggpubr)
+library(VIM)
+library(stringr)
+```
 
-# Daten einlesen
+## Aufgabe 1
+Der Datensatz wird mit dem R-Befehl _read_csv()_ eingelesen. Die eingelesenen Daten werden nun gewünscht aufbereitet. Für die Aufbereitung wird unteranderem das R-Packages _dplyr_ verwendet, deshalb muss der eingelesene Datensatz in ein Tibble umgewandelt werden.
+
+```{r, results="hide", message=F, error=F, warning=F}
 ugz_luftqualitaetsmessung_seit_2012 <- read_csv("ugz_luftqualitaetsmessung_seit-2012.csv")
 luftqualitaet <- as_tibble(ugz_luftqualitaetsmessung_seit_2012)
+```
 
-# Werte und titel separieren
+
+
+Als nächstes werden werden die Werte und der Header separiert und in neue Variablen abgespeichert. Dieser Vorgang ist nötig, da der orginale Datensatz mehrere Header-Zeilen (siehe Figure 1) enthält, die nicht benötigt werden. Zudem vereinfacht dieser Schritt, die Daten in gewünschter Form aufzubereiten.
+
+<center>
+
+![Header-Zeilen im originalen Datensatz](Header.png)
+
+</center>
+
+```{r, echo=T, results="hide", message=F, error=F, warning=F}
 titel <- slice(luftqualitaet, c(2))
 titel[1] <- "Datum"
 werte <- slice(luftqualitaet, c(-1:-5))
+```
 
-# Tabelle nach ort auseinander nehmen
-stampfenbach <- werte %>% select(1,2:14) %>%
-  mutate(Station = "Stampfenbachstrasse")
-stampfenbach_titel <- titel %>% select(1,2:14)
-stampfenbach_titel[length(stampfenbach)] <- "Station"
-names(stampfenbach) <- stampfenbach_titel
+\newpage
 
+
+Der Datensatz enhält Luftqualitätsmessungen von vier verschiedenen Messstationen in Zürich welche wie folgt umbennant werden:
+
+Originalname Messstation  |  Geänderter Name 
+------------------------- | ----------------------
+Stampfenbachstrasse       |  stampfenbach
+Schimmelstrasse           |  schimmel
+Heubeeribüel              |  heubeer
+Rosengarten               |  rosengarten
+
+
+
+Als folgendes Beispiel wird die Aufbereitung des Datensatzes in die gewünschte Form anhand der Stampfenbachstrasse aufgezeigt. Analog dazu sind die anderen drei Stationen aufbereitet worden.
+Zuerst werden alle Spalten, die zur jeweiligen Strasse gehören (hier Stampfenbachstrasse) von der Variable „werte“ separiert und in einer neuen Variable (hier stampfenbach) gespeichert (Hashtag 1). Als nächstes wird einen neuen Variablennamen (hier Station) erstellt. Unter diesem Variablennamen wird für jede der entsprechende Stationsname (hier Stampfenbachstrasse) als String hinzugefügt (Hashtag 2). 
+Als drittens werden alle Spalten, die zur jeweiligen Strasse gehören (hier Stampfenbachstrasse) von der Variable „titel“ separiert und in einer neuen Variable (hier stampfenbach_titel) gespeichert (Hashtag 3). Es kommt einen neuen Titelname (Station) zur Variable stampfenbach_titel hizu (Hashtag4). Zum Schluss werden die Titelnamen von stampfenbach mit den stampfenbach_titel überschrieben (Hashtag5). 
+
+
+```{r, echo=T, results="hide", message=F, error=F, warning=F}
+
+# Stampfenbachstrasse
+stampfenbach <- werte %>% select(1,2:14) %>%              # (1)
+  mutate(Station = "Stampfenbachstrasse")                 # (2)
+stampfenbach_titel <- titel %>% select(1,2:14)            # (3)
+stampfenbach_titel[length(stampfenbach)] <- "Station"     # (4)
+names(stampfenbach) <- stampfenbach_titel                 # (5)
+
+# Schimmelstrasse
 schimmel <- werte %>% select(1,15:21) %>%
   mutate(Station = "Schimmelstrasse")
 schimmel_titel <- titel %>% select(1,15:21)
 schimmel_titel[length(schimmel)] <- "Station"
 names(schimmel) <- schimmel_titel
 
+# Heuberibüel 
 heubeer <- werte %>% select(1,22:25) %>%
   mutate(Station = "Heubeeribüel")
 heubeer_titel <- titel %>% select(1,22:25)
 heubeer_titel[length(heubeer)] <- "Station"
 names(heubeer) <- heubeer_titel
 
+# Rosengarten
 rosengarten <- werte %>% select(1,26:30) %>%   
   mutate(Station = "Rosengarten")
 rosengarten_titel <- titel %>% select(1,26:30)
 rosengarten_titel[length(rosengarten)] <- "Station"
 names(rosengarten) <- rosengarten_titel
 
-# Tabelle zusammensetzen
+```
+\newpage
+
+In diesem Schritt werden alle vier aufbereiteten Stationen zusammengefügt und in „luftqual“gespeichert.
+```{r, echo=T, results="hide", message=F, error=F, warning=F}
 luftqual <- bind_rows(stampfenbach, schimmel, heubeer, rosengarten)
-
-# Wetterdaten "manipulieren" MAster Stampfenbach , Slaves andere Stationen
-luftqual <- luftqual %>% group_by(Datum) %>% arrange(Datum) %>% 
-  fill(Lufttemperatur : Regendauer, .direction = "down") %>% arrange(Station)
-
-# Zahlen von character nach numeric wandeln
-luftqual[2:14] <- as_tibble(sapply(luftqual[2:14], as.numeric))
-#str(luftqual)
 ```
 
+Da das Wetter sich nicht gross zwischen den vier Stationen unterscheidet und es keine näher gelegenen metrologischen Stationen gibt, werden die Wetterdaten der Station Stampfenbachstrasse als Wetterinformation gültig für alle Feinstaubmessstationen. Im untenstehenden Code wird „luftqual“ nach Datum sortiert und angeordnet und dann die Wetterdaten aufgefüllt für die anderen Stationen. Dabei aggiert Stampfenbach als Master.
+```{r, echo=T, results="hide", message=F, error=F, warning=F}
+luftqual <- luftqual %>% group_by(Datum) %>% arrange(Datum) %>% 
+  fill(Lufttemperatur : Regendauer, .direction = "down") %>% arrange(Station)
+```
+
+
+Als letztes werden alle Messwerte in Typ numeric umgewandlet, damit mit diesen gerechnet werden kann.
+```{r, echo=T, results="hide", message=F, error=F, warning=F}
+luftqual[2:14] <- as_tibble(sapply(luftqual[2:14], as.numeric))
+```
+
+
+Der aufbereitete Datensatz ist nun in gewünschter Form und kann für die folgenden Aufgaben wiederverwendet werden.
 
 
 ## Aufgabe 2
