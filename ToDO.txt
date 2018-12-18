@@ -1,1 +1,2 @@
 - Aufgabe 4 test: welcher test? mit was genau vergleichen
+- Aufgabe 4: NA's werden bei Rosengarten als 0 angezeigt => keine Anzeige!

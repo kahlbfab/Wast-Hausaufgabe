@@ -125,10 +125,17 @@ luftqual.PM10 %>% filter(PM10_uberschritt) %>%
 
 # Jahresmittelgrenzwert = 20ug/m^3
 
-# Datum nur das Jahr interessant
+
+# Datum nur das Jahr interessant 
+# !!! NA's werden als 0 angezeigt
 luftqual.PM10.2 <- luftqual.PM10 %>% mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
   group_by(Jahr, Station) %>%
   summarize(n = sum(PM10_uberschritt, na.rm = T))
+
+# Plot dazu
+# !!! NA's werden als 0 angezeigt
+ggplot(luftqual.PM10.2, aes(x = Jahr, y = n, color = Station)) + 
+  geom_col(aes(fill = Station),position = "dodge")
 
 # pairwise wilcox test
 # pairwise.wilcox.test(luftqual.PM10$n, luftqual.PM10$Jahr, luftqual.PM10$Station)
