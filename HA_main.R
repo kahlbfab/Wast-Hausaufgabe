@@ -59,7 +59,9 @@ View(luftqual)
 
 #### Aufgabe 2 ####
 # Theme um die Legenden grösse anzupassen
-t <- theme(legend.title=element_text(size=20), legend.text=element_text(size=20))
+t <- theme(legend.title=element_text(size=7), legend.text=element_text(size=7), 
+           axis.title.x = element_text(size = 10), axis.title.y = element_text(size = 10),
+           axis.text.x = element_text(size = 10), axis.text.y = element_text(size = 10))
 
 # Plots pro Variable
 g1 <- ggplot(luftqual, aes(x=Datum, y=Schwefeldioxid)) + 

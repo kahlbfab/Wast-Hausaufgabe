@@ -4,11 +4,14 @@ author: "J.Brändli, T.Haas, F.Kahlbacher"
 date: "17 Dezember 2018"
 header-includes: 
   \usepackage{fancyhdr}
-  \addtolength{\headheight}{1.5cm} 
+  \addtolength{\headheight}{1cm} 
   \pagestyle{fancyplain} 
-  \rhead{\includegraphics[height=3cm]{ZHAW.png}} 
+  \rhead{\includegraphics[height=1.4cm]{ZHAW.png}} 
   \renewcommand{\headrulewidth}{0.5pt} 
   \renewcommand{\contentsname}{Inhaltsverzeichnis}
+  \renewcommand*{\figurename}{Abbildung}
+
+  
 output:
   pdf_document: 
     toc: true
@@ -47,13 +50,14 @@ luftqualitaet <- as_tibble(ugz_luftqualitaetsmessung_seit_2012)
 
 
 
-Als nächstes werden die Werte und der Header separiert und in neue Variablen abgespeichert. Dieser Vorgang ist nötig, da der orginale Datensatz mehrere Header-Zeilen (siehe Figure 1) enthält, die nicht benötigt werden. Zudem vereinfacht dieser Schritt, die Daten in die gewünschte Form aufbereiten zu können.
+Als nächstes werden die Werte und der Header separiert und in neue Variablen abgespeichert. Dieser Vorgang ist nötig, da der orginale Datensatz mehrere Header-Zeilen (siehe Abbildung 1) enthält, die nicht benötigt werden. Zudem vereinfacht dieser Schritt, die Daten in die gewünschte Form aufbereiten zu können.
 
 <center>
-
 ![Header-Zeilen im originalen Datensatz](Header.png)
 
 </center>
+
+
 
 ```{r, echo=T, results="hide", message=F, error=F, warning=F}
 titel <- slice(luftqualitaet, c(2))
@@ -63,7 +67,7 @@ werte <- slice(luftqualitaet, c(-1:-5))
 
 \newpage
 
-Es werden von der variablen _werte_ und der Variablen _titel_ alle Spalten, die zur gleichen Station gehören (Stampfenbachstrasse, Schimmelstrasse, Heubeerbüel und Rosengarten) separiert und zusammengefügt.So erhält man für jede Station den aufbereiteten Datensatz mit ihren Werten und dem gewünschten Header. Am Schluss werden alle Stationen in die Variable _luftqual_ zusammengefügt.
+Es wird von der Variable _werte_ und der Variable _titel_ alle Spalten, die zur gleichen Station gehören (Stampfenbachstrasse, Schimmelstrasse, Heubeerbüel und Rosengarten) separiert und zusammengefügt. So erhält man für jede Station den aufbereiteten Datensatz mit ihren Werten und dem gewünschten Header. Am Schluss werden alle Stationen in die Variable _luftqual_ zusammengefügt.
 
 ```{r, echo=T, results="hide", message=F, error=F, warning=F}
 
@@ -96,9 +100,6 @@ names(rosengarten) <- rosengarten_titel
 luftqual <- bind_rows(stampfenbach, schimmel, heubeer, rosengarten)
 
 ```
-\newpage
-
-
 
 Da das Wetter sich nicht gross zwischen den vier Stationen unterscheidet und es keine näher gelegenen metrologischen Stationen gibt, werden die Wetterdaten der Station Stampfenbachstrasse als Wetterinformation gültig für alle Feinstaubmessstationen. 
 ```{r, echo=T, results="hide", message=F, error=F, warning=F}
@@ -113,16 +114,56 @@ luftqual[2:14] <- as_tibble(sapply(luftqual[2:14], as.numeric))
 ```
 
 
-
-
 ## Aufgabe 2
+```{r, echo=F, warning=F, fig.height=20, fig.width= 15}
+t <- theme(legend.title=element_text(size=17), legend.text=element_text(size=17), 
+           axis.title.x = element_text(size = 17), axis.title.y = element_text(size = 17),
+           axis.text.x = element_text(size = 15), axis.text.y = element_text(size = 15))
 
+# Plots pro Variable
+g1 <- ggplot(luftqual, aes(x=Datum, y=Schwefeldioxid)) + 
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25) + t
+g2 <- ggplot(luftqual, aes(x=Datum, y=Kohlenmonoxid)) + 
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25) + t
+g3 <- ggplot(luftqual, aes(x=Datum, y=Stickstoffmonoxid)) + 
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25) + t
+g4 <- ggplot(luftqual, aes(x=Datum, y=Stickstoffdioxid)) + 
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25) + t
+g5 <- ggplot(luftqual, aes(x=Datum, y=`Feinstaub PM10`)) + 
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25) +t
+g6 <- ggplot(luftqual, aes(x=Datum, y=`Ozon, höchstes Stundenmittel`)) + 
+  geom_line(aes(color=Station), alpha = 0.75, size = 0.25) + t
 
-
-
-## Aufgabe 3
+# Zusammenfügen der Plots
+ggpubr::ggarrange(g1,g2,g3,g4,g5,g6, ncol = 1, nrow = 6, common.legend = TRUE, legend="bottom")
+```
 
 \newpage
+
+## Aufgabe 3
+```{r, echo=F}
+luftqual.A3 <- rapply(luftqual, f=function(x) ifelse(is.nan(x),NA,x), how="replace")
+```
+Im Datensatz gibt es insgesamt `r sum(is.na(luftqual.A3))` fehlende Werte. 
+In untenstehender Grafik ist links der Anteil der fehlenden Werte pro Variable und rechts der Anteil der fehlenden Werte für Kombinationen von Variablen visualisiert.
+```{r, echo=F, fig.height=4, fig.width=7, results="hide", warning=F}
+names(luftqual.A3) <- c("Datum", "SO2", "CO", "O3_max_h1", "O3_nb_h1>120",
+                        "NO2", "NO", "PM10", "T", "Hr", "p", "WVS", "StrGlo", "RainDur", "Station")
+
+par(mar= c(4,2,2,6))
+aggr_plot <- aggr(luftqual.A3, col=c('navyblue','red'), 
+                  numbers = TRUE, sortVars=TRUE, labels=names(luftqual.A3),
+                  cex.axis=0.7, gap=0.5,
+                  ylab=c("Histogram of missing data","Pattern"), cex.lab = 1)
+dev.off()
+```
+
+Der Anteil der fehlenden Werte pro Variable ist für _SO2_ am grössten. Er liegt bei etwa 0.6, dicht gefolgt von _CO_ mit 0.58 und _PM10_ mit 0.34. 
+
+Der Anteil der fehlenden Werte für Kombinationen von Variablen ist schwieriger zu lesen. Die meiste Kombination tritt auf, wenn alle Daten (keine NAs) vorhanden sind. Die zweitmeiste Kombination tritt auf, wenn für SO2, CO2 und PM10 Werte fehlen und alle anderen Variablen keine NAs enthalten. 
+
+\newpage
+
 ## Aufgabe 4
 In dieser Aufgabe ist die Variable Feinstaub (PM10) von Interesse, jeweils für die Messpunkte Stampfenbachstrasse, Schimmelstrasse und Rosengartenstrasse. Heubeeribüel hat keine Messungen des Feinstaubes und wird darum nicht berücksichtigt.  
 
