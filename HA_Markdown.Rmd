@@ -202,17 +202,37 @@ Aus der Grafik ist ersichtlich, dass die Feinstaubbelastung im Winter höher ist
 
 Jahresmittelgrenzwert = 20ug/m^3
 
-Daten vorbereiten: Nach dem Jahr und Station gruppieren
+Daten vorbereiten: Nach dem Jahr und Station gruppieren und Werte mit NA entfernen.
 ```{r}
-luftqual.PM10 <- luftqual.PM10 %>% mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
+luftqual.PM10.2 <- luftqual.PM10 %>% 
+  mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
+  drop_na() %>%
   group_by(Jahr, Station) %>%
   summarize(n = sum(PM10_uberschritt, na.rm = T))
-
-head(luftqual.PM10)
-
-# pairwise wilcox test
-# pairwise.wilcox.test(luftqual.PM10$n, luftqual.PM10$Jahr, luftqual.PM10$Station)
 ```
+
+**Statistischer Test**, ob die Anzahl Überschreitungen signifikant sind. Wir verwenden den Binom.test, da es sich um mehrere Bernoulli Experimente handelt (0 keine Überschreitung, 1 Überschreitung).    
+h0: eine überschreitungen pro Jahr  
+h1: mehr als 1 überschreitungen pro Jahr  
+```{r, tidy=T}
+fun_A4 <- function(anzahl){
+  testen <- binom.test(x = anzahl, n = 365, p = 1/365, alternative = "greater", conf.level = 0.99)
+  return(ifelse(testen$p.value<0.01, "H1", "H0"))
+}
+luftqual.PM10.2$h <- apply(luftqual.PM10.2[,3], 1, fun_A4) 
+luftqual.PM10.2
+```
+h0 wird ab 5 überschreitungen im Jahr verworfen.
+
+**Plot der Überschreitungen**
+```{r, fig.height=5, fig.width=7}
+ggplot(luftqual.PM10.2, aes(x = Jahr, y = n, fill = Station)) + 
+  geom_col(aes(), position = "dodge") + 
+  geom_text(aes(label=h),angle = 90, position = position_dodge(0.9), hjust = 1, size = 4)+
+  geom_hline(yintercept = 4.5, col = "red")
+```
+Die Jahren und Stationen bei welchen die Balken über der roten Linie liegen, bei diesen wird die H0 verworfen. Bei allen die darunter liegen wird H0 angenommen. 
+
 
 ## Aufgabe 5
 Visualisierung des Zusammenhanges zwischen der Regenmenge und der Feinstaubkonzentration pro Station. 

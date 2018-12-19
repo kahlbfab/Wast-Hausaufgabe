@@ -140,16 +140,16 @@ luftqual.PM10.2 <- luftqual.PM10 %>%
 # h1: mehr als 1 überschreitungen pro Jahr
 fun_A4 <- function(anzahl){
   testen <- binom.test(x = anzahl, n = 365, p = 1/365, alternative = "greater", conf.level = 0.99)
-  return(ifelse(testen$p.value<0.01, T, F))
+  return(ifelse(testen$p.value<0.01, "H1", "H0"))
 }
-luftqual.PM10.2$h1 <- apply(luftqual.PM10.2[,3], 1, fun_A4) 
+luftqual.PM10.2$h <- apply(luftqual.PM10.2[,3], 1, fun_A4) 
 # h0 wird ab 5 verworfen
 
 # Plot dazu
 ggplot(luftqual.PM10.2, aes(x = Jahr, y = n, fill = Station)) + 
-  geom_col(aes(), position = "dodge") 
-  #+ geom_text(aes(label = luftqual.PM10.2$h1), color = "black",  size=4, position = position_dodge2(width = 1), angle = 0, hjust = .5, vjust = -.1)
-
+  geom_col(aes(), position = "dodge") + 
+  geom_text(aes(label=h),angle = 90, position = position_dodge(0.9), hjust = 1, size = 4)+
+  geom_hline(yintercept = 4.5, col = "red")
 
 
 #### Aufgabe 5 ####
