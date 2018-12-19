@@ -50,7 +50,7 @@ luftqualitaet <- as_tibble(ugz_luftqualitaetsmessung_seit_2012)
 
 
 
-Als nächstes werden die Werte und der Header separiert und in neue Variablen abgespeichert. Dieser Vorgang ist nötig, da der orginale Datensatz mehrere Header-Zeilen (siehe Abbildung 1) enthält, die nicht benötigt werden. Zudem vereinfacht dieser Schritt, die Daten in die gewünschte Form aufbereiten zu können.
+Als nächstes werden die Werte und der Header separiert und in neue Variablen abgespeichert. Dieser Vorgang ist nötig, da der orginale Datensatz mehrere Header-Zeilen (siehe Abbildung 1) enthält, die nicht benötigt werden. Zudem vereinfacht dieser Schritt, die Daten in die gewünschte Form aufbereiten zu können.  
 
 <center>
 ![Header-Zeilen im originalen Datensatz](Header.png)
@@ -138,6 +138,9 @@ g6 <- ggplot(luftqual, aes(x=Datum, y=`Ozon, höchstes Stundenmittel`)) +
 ggpubr::ggarrange(g1,g2,g3,g4,g5,g6, ncol = 1, nrow = 6, common.legend = TRUE, legend="bottom")
 ```
 
+Die verschiedenen Messwerte verhalten sich über alle Stationen gesehen relativ ähnlich.
+Auffällig ist, dass die Messwerte nicht nicht bei allen Stationen durchgäng vorhanden sind.
+
 \newpage
 
 ## Aufgabe 3
@@ -145,7 +148,7 @@ ggpubr::ggarrange(g1,g2,g3,g4,g5,g6, ncol = 1, nrow = 6, common.legend = TRUE, l
 luftqual.A3 <- rapply(luftqual, f=function(x) ifelse(is.nan(x),NA,x), how="replace")
 ```
 Im Datensatz gibt es insgesamt `r sum(is.na(luftqual.A3))` fehlende Werte. 
-In untenstehender Grafik ist links der Anteil der fehlenden Werte pro Variable und rechts der Anteil der fehlenden Werte für Kombinationen von Variablen visualisiert.
+In untenstehender Grafik ist links der Anteil der fehlenden Werte pro Variable und rechts der Anteil der fehlenden Werte für Kombinationen von Variablen visualisiert.  
 ```{r, echo=F, fig.height=4, fig.width=7, results="hide", warning=F}
 names(luftqual.A3) <- c("Datum", "SO2", "CO", "O3_max_h1", "O3_nb_h1>120",
                         "NO2", "NO", "PM10", "T", "Hr", "p", "WVS", "StrGlo", "RainDur", "Station")
@@ -267,7 +270,79 @@ Die Nullhypothese wird klar verworfen. Das heisst, die Feinstaubkonzentration is
 
 
 ## Aufgabe 6
+Für diese Aufgabe werden drei neue Datensätze eingelesen. Diese enthalten Informationen über eine Bevökerungsbefragung der Stadt Zürich und über den Wohnort der Befragten.
+```{r}
+bev_bef <- read_csv("bevoelkerungsbefragung_2015_stadtentwicklung_zuerich.csv")
+adressen <- read_csv("adressen.csv")
+attribute <- read_csv("attributbeschreibung_bvb_2015_stadtentwicklung_zuerich.csv")
+```
 
+Um die in der Aufgabenstellung vorgeschlagene Frage (Zufriedenheit mit dem öffentlichen Grünraum im Quartier) zu finden werden folgende Befehle durchgeführt:
+
+```{r}
+filter(attribute, str_detect(feldbeschreibung, "öffentlichen Grünraum"))
+attribute$feldbeschreibung[attribute$technischerfeldname == "f36105Lang"]
+```
+
+Dabei trifft die Frage "f36105" zu.
+Als nächstes wird gesucht in welchem Stadtkreis sich die jeweiligen Messstationen befinden.
+
+```{r}
+filter(adressen, str_detect(lokalisationsname, "Stampfenbachstrasse"))
+filter(adressen, str_detect(lokalisationsname, "Schimmelstrasse"))
+filter(adressen, str_detect(lokalisationsname, "Rosengarten"))
+```
+
+Da die Messstation in Heubeeribüel keine Feinstaubmessungen durchgeführt haben, wurde diese nicht lokalisiert.
+Die Stampfenbachstrasse befindet sich im Kreis 1 und 6 welches dem Stadtkreiscode 1 und 5 enspricht. In Kreis 3 und 4 befindet sich die Schimmelstrasse (Stadkreiscode 2 und 3). Und zuletzt die Rosengartenstation welche sich im Kreis 10 (Stadtkreiscode 9) befindet. Der Stadtkreiscode weicht um von den Kreisen ab, da Kreis 1 und 2 zusammen einen Code haben.
+
+In der Aufgbaenstellung wird verlangt, dass die Antworten mit den Noten 1-3 zusammengefügt werden zur Note 3. Weiter werden alle Anworten mit der Note 98 (weiss nicht) und 99 (keine Angabe) entfernt.
+
+```{r}
+# Noten 1-3 neu 3
+bev_bef_gruen <- select(bev_bef, 
+                        intnr2015Sort, stadtkreiseLang, stadtkreiseSort, f36105Lang, f36105Sort)
+bev_bef_gruen$f36105Sort[bev_bef_gruen$f36105Sort < 3] <- 3
+
+# entfernen von weiss nicht 98 und keine Angabe 99
+bev_bef_gruen <- bev_bef_gruen[!bev_bef_gruen$f36105Sort %in% c(98,99),]
+```
+
+Nun werden die Noten der Kreise der Messstation zugewiesen.
+
+```{r}
+kreis_stampfen <- filter(bev_bef_gruen, stadtkreiseSort %in% c(1,5))
+kreis_schimmel <- filter(bev_bef_gruen, stadtkreiseSort %in% c(2,3))
+kreis_rosen <- filter(bev_bef_gruen, stadtkreiseSort == 9)
+```
+
+Um sich eine Übersicht über die Feinstaubbelastung und Zufriedenheit der Bevölkerung nach Station zu verschaffen werden die jeweiligen Mittelwerte berechnet.
+
+```{r}
+mean(kreis_rosen$f36105Sort)
+mean(luftqual$`Feinstaub PM10`[luftqual$Station == "Rosengarten"], na.rm = T)
+mean(kreis_schimmel$f36105Sort)
+mean(luftqual$`Feinstaub PM10`[luftqual$Station == "Schimmelstrasse"], na.rm = T) 
+mean(kreis_stampfen$f36105Sort)
+mean(luftqual$`Feinstaub PM10`[luftqual$Station == "Stampfenbachstrasse"], na.rm = T)
+```
+
+Hierbei ist erkennbar das an der Schimmelstrasse eine höhere durchschnittliche Feinstaubbelastung gemessen wurde. Zugleich ist auch die durchschnittliche Zufriedenheit der Bevölkerung tiefer als bei den anderen Messtationen.
+
+Um festzustellen ob die Zufriedenheit nur zufällig tiefer wird getestet. Dabei ist die Nullhypthese, dass es keinen Zufriedenheitsunterschied zwischen den Stadtkreisen gibt.
+
+```{r}
+wilcox.test(x = kreis_rosen$f36105Sort, y = kreis_schimmel$f36105Sort,
+       conf.level = 0.99, alternative = "two.sided")
+
+wilcox.test(x = kreis_rosen$f36105Sort, y = kreis_stampfen$f36105Sort,
+       conf.level = 0.99, alternative = "two.sided")
+
+wilcox.test(x = kreis_schimmel$f36105Sort, y = kreis_stampfen$f36105Sort,
+       conf.level = 0.99, alternative = "two.sided")
+```
+
+Die Nullhypothese wird beim ersten und dritten Test verworfen. Das heisst das die Zufriedenheit der Bevölkerung im Kreis 3 und 4 signifikant tiefer ist.
 
 # __Fazit__
 

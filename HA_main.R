@@ -148,7 +148,7 @@ luftqual.PM10.2$h <- apply(luftqual.PM10.2[,3], 1, fun_A4)
 # Plot dazu
 ggplot(luftqual.PM10.2, aes(x = Jahr, y = n, fill = Station)) + 
   geom_col(aes(), position = "dodge") + 
-  geom_text(aes(label=h),angle = 90, position = position_dodge(0.9), hjust = 1, size = 4)+
+  geom_text(aes(label=h),angle = 90, position = position_dodge(0.9), hjust = 1, size = 4) +
   geom_hline(yintercept = 4.5, col = "red")
 
 
