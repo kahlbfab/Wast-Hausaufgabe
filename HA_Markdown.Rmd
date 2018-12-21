@@ -326,7 +326,7 @@ mean(luftqual$`Feinstaub PM10`[luftqual$Station == "Stampfenbachstrasse"], na.rm
 
 Hierbei ist erkennbar das an der Schimmelstrasse eine höhere durchschnittliche Feinstaubbelastung gemessen wurde. Zugleich ist auch die durchschnittliche Zufriedenheit der Bevölkerung tiefer als bei den anderen Messtationen.
 
-Um festzustellen ob die Zufriedenheit nur zufällig tiefer wird getestet. Dabei ist die Nullhypthese, dass es keinen Zufriedenheitsunterschied zwischen den Stadtkreisen gibt.
+Um festzustellen ob die Zufriedenheit nur zufällig tiefer ist wird nun getestet. Dabei ist die Nullhypthese, dass es keinen Zufriedenheitsunterschied zwischen den Stadtkreisen gibt.
 
 ```{r}
 wilcox.test(x = kreis_rosen$f36105Sort, y = kreis_schimmel$f36105Sort,
@@ -341,9 +341,10 @@ wilcox.test(x = kreis_schimmel$f36105Sort, y = kreis_stampfen$f36105Sort,
 
 Die Nullhypothese wird beim ersten und dritten Test verworfen. Das heisst, dass die Zufriedenheit der Bevölkerung im Kreis 3 und 4 signifikant tiefer ist.
 
+\newpage
 # __Fazit__
 
-In dieser Aufgabe wurden Daten aus der Luftqualitätsmessung und der Bevölkerungsbefragung ausgewertet. Aus unserer Untersuchungen geht hervor, dass die Regendauer einen Einfluss auf die Feinstaubkonzentration hat. Ebenfalls sind die Personen, welche in einer Umgebung Wohnhaft sind mit einer hohen Feinstaubkonzentration unzufriedener. Die Schwierigkeit an dieser Aufgabe bestand in der Datenaufbereitung, welche auch am meisten Zeit in anspruch genommen hat. 
+In dieser Aufgabe wurden Luftqualitätsmessungen und Bevölkerungsbefragungen in der Stadt Zürich ausgewertet. Aus unseren Untersuchungen geht hervor, dass die Regendauer einen Einfluss auf die Feinstaubkonzentration in der Luft hat. Ebenfalls sind die Personen, welche im Stadtkreis 3 und 4 Wohnhaft sind unzufriedener mit dem öffentlichen Grünraum im Quartier, als in den Stadkreisen 1, 2, 5 und 10. Die Schwierigkeit dieser Aufgabe bestand in der Datenaufbereitung, welche auch am meisten Zeit in Anspruch genommen hat. 
 
 
 
