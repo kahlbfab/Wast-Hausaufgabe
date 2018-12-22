@@ -1,7 +1,7 @@
 ---
 title: __Hausaufgabe Wast3__
 author: "J.Brändli, T.Haas, F.Kahlbacher"
-date: "17 Dezember 2018"
+date: "`r format(Sys.time(), '%d %B %Y')`"
 header-includes: 
   \usepackage{fancyhdr}
   \addtolength{\headheight}{1cm} 
@@ -9,14 +9,11 @@ header-includes:
   \rhead{\includegraphics[height=1.4cm]{ZHAW.png}} 
   \renewcommand{\headrulewidth}{0.5pt} 
   \renewcommand{\contentsname}{Inhaltsverzeichnis}
-  \renewcommand*{\figurename}{Abbildung}
-
-  
 output:
   pdf_document: 
     toc: true
-    number_sections: yes
     toc_depth: 2
+    number_sections: yes
     fig_caption: true
   html_document: default
   word_document: default
@@ -24,8 +21,8 @@ output:
 \newpage
 
 # Einleitung
-In diesem Bericht werden aktuelle Luftqualitätsmessungen vom Umwelt- und Gesundheitsschutz der Stadt Zürich untersucht. Der Datensatz, welche von der Datenbank OSTLUFT stammt, enthält unteranderem folgende Messgrössen: Schwefeldioxid (SO2), Kohlenmonoxid (CO), Stickstoffdioxid (NO2), Stickstoffmonoxid (NO), Ozonmengen (O3) und meteorolgische Daten, sowie Feinstaubmessungen (PM10). Vor allem die Feinstaubmessungen sind von Relevanz. Der Feinstaub kann tief in die Lunge eindringen und schweriwiegende Auswirkungen auf die Gesunheit des Menschen haben. 
-Die Messgrössen stammen von den Wetterstationen an der Stampfenbachstrasse, Schimmelstrasse, Heubeeribüelstrasse und der Rosengartenstrasse. 
+In diesem Bericht werden aktuelle Luftqualitätsmessungen vom Umwelt- und Gesundheitsschutz der Stadt Zürich untersucht. Der Datensatz, welche von der Datenbank OSTLUFT stammt, enthält unteranderem folgende Messgrössen: Schwefeldioxid ($SO_2$), Kohlenmonoxid (CO), Stickstoffdioxid ($NO_2$), Stickstoffmonoxid (NO), Ozonmengen ($O_3$) und meteorolgische Daten, sowie Feinstaubmessungen (PM10). Vor allem die Feinstaubmessungen sind von Relevanz. Der Feinstaub kann tief in die Lunge eindringen und schwerwiegende Auswirkungen auf die Gesunheit des Menschen haben. 
+Die Messgrössen stammen von den Wetterstationen an der Stampfenbachstrasse, Schimmelstrasse, Heubeeribüel und der Rosengartenstrasse. 
 
 \newpage
 # __Aufgaben__
@@ -38,6 +35,7 @@ library(ggplot2)
 library(ggpubr)
 library(VIM)
 library(stringr)
+library(knitr)
 ```
 
 ## Aufgabe 1
@@ -64,7 +62,7 @@ werte <- slice(luftqualitaet, c(-1:-5))
 
 \newpage
 
-Es wird von der Variable _werte_ und der Variable _titel_ alle Spalten, die zur gleichen Station gehören (Stampfenbachstrasse, Schimmelstrasse, Heubeerbüel und Rosengarten) separiert und zusammengefügt. So erhält man für jede Station den aufbereiteten Datensatz mit ihren Werten und dem gewünschten Header. Am Schluss werden alle Stationen in die Variable _luftqual_ zusammengefügt.
+Es wird von der Variable _werte_ und der Variable _titel_ alle Spalten, die zur gleichen Station gehören (Stampfenbachstrasse, Schimmelstrasse, Heubeeribüel und Rosengartenstrasse) separiert und zusammengefügt. So erhält man für jede Station den aufbereiteten Datensatz mit ihren Werten und dem gewünschten Header. Am Schluss werden alle Stationen in die Variable _luftqual_ zusammengefügt.
 
 ```{r`, results = "hide", warning=F, message=F}
 stampfenbach <- werte %>% select(1,2:14) %>%
@@ -103,7 +101,7 @@ luftqual <- luftqual %>% group_by(Datum) %>% arrange(Datum) %>%
 ```
 
 
-Als letztes werden alle Messwerte in Typ numeric umgewandlet, damit mit diesen gerechnet werden kann. Der aufbereitete Datensatz ist nun in gewünschter Form und kann für die folgenden Aufgaben verwendet werden.
+Als letztes werden alle Messwerte in Typ _numeric_ umgewandlet, damit mit diesen gerechnet werden kann. Der aufbereitete Datensatz ist nun in gewünschter Form und kann für die folgenden Aufgaben verwendet werden.
 ```{r, echo=T, results="hide", message=F, error=F, warning=F}
 luftqual[2:14] <- as_tibble(sapply(luftqual[2:14], as.numeric))
 ```
@@ -111,7 +109,7 @@ luftqual[2:14] <- as_tibble(sapply(luftqual[2:14], as.numeric))
 \newpage
 ## Aufgabe 2
 Die verschiedenen Messwerte verhalten sich über alle Stationen gesehen relativ ähnlich.
-Auffällig ist, dass die Messwerte nicht nicht bei allen Stationen durchgäng vorhanden sind.  
+Auffällig ist, dass die Messwerte nicht bei allen Stationen durchgängig vorhanden sind.  
 ```{r, echo=F, warning=F, fig.height=10, fig.width= 8}
 t <- theme(legend.title=element_text(size=10), legend.text=element_text(size=10), 
            axis.title.x = element_text(size = 10), axis.title.y = element_text(size = 10),
@@ -142,7 +140,7 @@ ggpubr::ggarrange(g1,g2,g3,g4,g5,g6, ncol = 1, nrow = 6, common.legend = TRUE, l
 ```{r, echo=F}
 luftqual.A3 <- rapply(luftqual, f=function(x) ifelse(is.nan(x),NA,x), how="replace")
 ```
-Im Datensatz gibt es insgesamt `r sum(is.na(luftqual.A3))` fehlende Werte. 
+Im Datensatz gibt es insgesamt `r sum(is.na(luftqual.A3))` fehlende Werte (NAs). 
 In untenstehender Grafik ist links der Anteil der fehlenden Werte pro Variable und rechts der Anteil der fehlenden Werte für Kombinationen von Variablen visualisiert.  
 ```{r, echo=F, fig.height=4, fig.width=7, results="hide", warning=F}
 names(luftqual.A3) <- c("Datum", "SO2", "CO", "O3_max_h1", "O3_nb_h1>120",
@@ -156,34 +154,38 @@ aggr_plot <- aggr(luftqual.A3, col=c('navyblue','red'),
 dev.off()
 ```
 
-Der Anteil der fehlenden Werte pro Variable ist für _SO2_ am grössten. Er liegt bei etwa 0.6, dicht gefolgt von _CO_ mit 0.58 und _PM10_ mit 0.34. 
+Der Anteil der fehlenden Werte pro Variable ist für _$SO_2$_ am grössten. Er liegt bei etwa 0.6, dicht gefolgt von _CO_ mit 0.58 und _PM10_ mit 0.34. 
 
-Der Anteil der fehlenden Werte für Kombinationen von Variablen ist schwieriger zu lesen. Die meiste Kombination tritt auf, wenn alle Daten (keine NAs) vorhanden sind. Die zweitmeiste Kombination tritt auf, wenn für SO2, CO2 und PM10 Werte fehlen und alle anderen Variablen keine NAs enthalten. 
+Der Anteil der fehlenden Werte für Kombinationen von Variablen ist schwieriger zu lesen. Die meiste Kombination tritt auf, wenn alle Daten (keine NAs) vorhanden sind. Die zweitmeiste Kombination tritt auf, wenn für $SO_2$, $CO_2$ und PM10 Werte fehlen und alle anderen Variablen keine NAs enthalten. 
 
 \newpage
 
 ## Aufgabe 4
 In dieser Aufgabe ist die Variable Feinstaub (PM10) von Interesse, jeweils für die Messpunkte Stampfenbachstrasse, Schimmelstrasse und Rosengartenstrasse. Heubeeribüel hat keine Messungen des Feinstaubes und wird darum nicht berücksichtigt.  
 
-Der Tagesmittelgrenzwert vom PM10 beträgt 50ug/m^3 und darf max. 1x pro Jahr ueberschritten werden.  
+Der Tagesmittelgrenzwert von PM10 beträgt 50 $\frac{\mu g}{m^3}$ und darf max. 1 mal pro Jahr überschritten werden.  
 
-Daten vorbereiten:
+Die Daten werden wie folgt vorbereitet:
 ```{r, tidy=T}
 luftqual.PM10 <- luftqual %>% ungroup() %>%
   select(Datum, 'Feinstaub PM10', Station) %>%  # nur relevante Kolumnen
   filter(Station != "Heubeeribüel") %>%
   mutate(PM10_uberschritt = `Feinstaub PM10` >= 50 )
 
-head(luftqual.PM10)
+kable(head(luftqual.PM10))
 ```
-Die ersten 6 Werte sind per Zufall gerade NA. 
+
+Die ersten 6 Werte (siehe Tabelle oben) sind per Zufall gerade NaN respektiv NA.  
 
 
 ### Wie oft wird der Tagesmittel-Grenzwert an welcher Station überschritten?
 ```{r}
-luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.rm = T))
+l.PM10 <- luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.rm = T))
+kable(l.PM10)
 ```
-An der Schimmelstrasse wird der Tagesmittel-Grenzwert am häufigsten überschritten.
+
+An der Schimmelstrasse wird der Tagesmittel-Grenzwert mit `r l.PM10$n[l.PM10$Station == "Schimmelstrasse"]` -mal am häufigsten überschritten.
+
 \newpage  
 
 ### Überschrittenen Tagesmittelgrenzwerte im Zeitlichen verlauf für alle Stationen in einer Grafik
@@ -192,15 +194,14 @@ luftqual.PM10 %>% filter(PM10_uberschritt) %>%
   ggplot(aes(x=Datum, y=`Feinstaub PM10`)) + geom_point(aes(color = Station)) + ggtitle(" Überschrittene Tagesmittelgrenzwerte (PM10 > 50)")
 ```
 
-Der Tagesmittelgrenzwert wird bei allen Stationen oft in den gleichen Wochen / Monaten uebertroffen. Dies ist gut moeglich, da alle Messstationen ähnlichen Einflüssen ausgesetzt sind, auf welche der Feinstaub reagiert. Wie z.B. die Jahreszeit und das Wetter.
+Der Tagesmittelgrenzwert wird bei allen Stationen oft in den gleichen Wochen / Monaten übertroffen. Dies ist gut möglich, da alle Messstationen ähnlichen Einflüssen ausgesetzt sind, auf welche der Feinstaub reagiert. Wie z.B. die Jahreszeit und das Wetter.
 
 Aus der Grafik ist ersichtlich, dass die Feinstaubbelastung im Winter höher ist, als in den anderen Jahreszeiten.
 
-### In welchen Jahren und Stationen ist der Anteil der Tage mit Grenzwert uberschreitungen signifikant groesser als zufaellig
+### In welchen Jahren und Stationen ist der Anteil der Tage mit Grenzwert-Überschreitungen signifikant grösser als zufällig
 
-Jahresmittelgrenzwert = 20ug/m^3
-
-Daten vorbereiten: Nach dem Jahr und Station gruppieren und Werte mit NA entfernen.
+Der Jahresmittelgrenzwert von PM10 liegt bei 20 $\frac{\mu g}{m^3}$.
+Die Daten werden nach dem Jahr und der Station gruppiert und alle NAs werden entfernt.  
 ```{r}
 luftqual.PM10.2 <- luftqual.PM10 %>% 
   mutate(Jahr = strtrim(luftqual.PM10$Datum, 4)) %>%
@@ -210,18 +211,22 @@ luftqual.PM10.2 <- luftqual.PM10 %>%
 ```
 
 **Statistischer Test**, ob die Anzahl Überschreitungen signifikant sind. Wir verwenden den Binom.test, da es sich um mehrere Bernoulli Experimente handelt (0 keine Überschreitung, 1 Überschreitung).    
-h0: eine überschreitungen pro Jahr  
-h1: mehr als 1 überschreitungen pro Jahr  
+
+$H_0$: eine Überschreitung pro Jahr  
+$H_1$: mehr als 1 Überschreitung pro Jahr  
 ```{r, tidy=T}
 fun_A4 <- function(anzahl){
   testen <- binom.test(x = anzahl, n = 365, p = 1/365, alternative = "greater", conf.level = 0.99)
   return(ifelse(testen$p.value<0.01, "H1", "H0"))
 }
 luftqual.PM10.2$h <- apply(luftqual.PM10.2[,3], 1, fun_A4) 
-luftqual.PM10.2
+kable(luftqual.PM10.2)
 ```
-h0 wird ab 5 überschreitungen im Jahr verworfen.
+
+$H_0$ wird ab 5 Überschreitungen im Jahr verworfen.
+
 \newpage  
+
 **Plot der Überschreitungen**  
 
 ```{r, fig.height=5, fig.width=7, echo=F}
@@ -230,7 +235,7 @@ ggplot(luftqual.PM10.2, aes(x = Jahr, y = n, fill = Station)) +
   geom_text(aes(label=h),angle = 90, position = position_dodge(0.9), hjust = 1, size = 4)+
   geom_hline(yintercept = 4.5, col = "red")
 ```
-Die Jahren und Stationen bei welchen die Balken über der roten Linie liegen, bei diesen wird die H0 verworfen. Bei allen die darunter liegen wird H0 angenommen. 
+In den Jahren und Stationen bei welchen die Balken über der roten Linie liegen, wird $H_0$ verworfen. Bei allen darunter liegenden wird $H_0$ angenommen. 
 
 \newpage
 ## Aufgabe 5
@@ -239,18 +244,18 @@ Visualisierung des Zusammenhanges zwischen der Regenmenge und der Feinstaubkonze
 ordered_PM10 <- select(luftqual, Datum, `Feinstaub PM10`, Station, Regendauer)
 ```
 
-```{r, fig.height=4,fig.width=7, warning=F, echo=F}
+```{r, fig.height=3,fig.width=7, warning=F, echo=F}
 # Plot
 ggplot(ordered_PM10, aes(x= Regendauer, y= `Feinstaub PM10`)) +
   geom_point(aes(color = Station),  alpha = 0.5, size = 0.8)
 ```
 
-Auf der Grafik ist folgendes Verhalten zu erkennen: Die Feinstaubkonzentration ist tendenziell höher wenn es nicht Regnet, als wenn es Regnet. Um so länger es Regnet, nimmt dieser Effekt noch zu. 
+Aus der Grafik ist folgendes Verhalten zu erkennen: Die Feinstaubkonzentration ist tendenziell höher wenn es nicht regnet, als wenn es regnet. Dieser Effekt nimmt mit der länge der Regendauer zu. 
 
-Mit einem Statistischen Test soll überprüft werden, ob ein Zusammenhang besteht. Es wurde der t-Test verwendet, da die Mittelwerte der Feinstaubkonzentration normalverteilt aber die Varianz nicht bekannt sind. 
+Mit einem Statistischen Test soll überprüft werden, ob ein Zusammenhang besteht. Es wurde der t-Test verwendet, da die Mittelwerte der Feinstaubkonzentration normalverteilt aber die Varianz nicht bekannt ist. 
 
-h0: mu_Feinstaub_regen = mu_Feinstaub_keinregen  
-h1: mu_Feinstaub_regen < mu_Feinstaub_keinregen
+$H_0$: mu_Feinstaub_regen = mu_Feinstaub_keinregen  
+$H_1$: mu_Feinstaub_regen < mu_Feinstaub_keinregen
 ```{r}
 PM10_test <- ordered_PM10 %>% group_by(Datum) %>%
   summarise(PM10_mean = mean(`Feinstaub PM10`, na.rm = T) ,
@@ -261,9 +266,7 @@ t.test(x = PM10_test$PM10_mean[PM10_test$Regendauer != 0],
        y = PM10_test$PM10_mean[PM10_test$Regendauer == 0],
        conf.level = 0.99, alternative = "less")
 ```
-p < 0.01 --> h0 verwerfen  
-
-Die Nullhypothese wird klar verworfen. Das heisst, die Feinstaubkonzentration ist an Tagen mit Regen signifikant tiefer als an Tagen mit Regen. 
+Der p-Wert (p-value) ist kleiner als $\alpha =0.01$. Deshalb wird die Nullhypothese verworfen. Sie wird sogar klar verworfen. Das heisst, die Feinstaubkonzentration ist an Tagen mit Regen signifikant tiefer als an Tagen ohne Regen. 
 
 \newpage
 ## Aufgabe 6
@@ -278,10 +281,11 @@ Um die in der Aufgabenstellung vorgeschlagene Frage (Zufriedenheit mit dem öffe
 
 ```{r, results="hold"}
 filter(attribute, str_detect(feldbeschreibung, "öffentlichen Grünraum"))
+
 attribute$feldbeschreibung[attribute$technischerfeldname == "f36105Lang"]
 ```
 
-Dabei trifft die Frage "f36105" zu.
+Dabei trifft die Frage _f36105_ zu.
 Als nächstes wird gesucht in welchem Stadtkreis sich die jeweiligen Messstationen befinden.
 
 ```{r, eval = F}
@@ -312,21 +316,21 @@ kreis_stampfen <- filter(bev_bef_gruen, stadtkreiseSort %in% c(1,5))
 kreis_schimmel <- filter(bev_bef_gruen, stadtkreiseSort %in% c(2,3))
 kreis_rosen <- filter(bev_bef_gruen, stadtkreiseSort == 9)
 ```
+\newpage
 
-Um sich eine Übersicht über die Feinstaubbelastung und Zufriedenheit der Bevölkerung nach Station zu verschaffen werden die jeweiligen Mittelwerte berechnet.
+Um sich eine Übersicht über die Feinstaubbelastung und Zufriedenheit der Bevölkerung nach Station zu verschaffen werden die jeweiligen Mittelwerte berechnet und in untenstehenden Tabelle dargestellt.
 
-```{r}
-mean(kreis_rosen$f36105Sort)
-mean(luftqual$`Feinstaub PM10`[luftqual$Station == "Rosengarten"], na.rm = T)
-mean(kreis_schimmel$f36105Sort)
-mean(luftqual$`Feinstaub PM10`[luftqual$Station == "Schimmelstrasse"], na.rm = T) 
-mean(kreis_stampfen$f36105Sort)
-mean(luftqual$`Feinstaub PM10`[luftqual$Station == "Stampfenbachstrasse"], na.rm = T)
+```{r, echo =F}
+kable(data.frame(Station = c("Rosengarten", "Schimmelstrasse", "Stampfenbachstrasse"),
+           `Mittelwert Noten` = c(mean(kreis_rosen$f36105Sort), mean(kreis_schimmel$f36105Sort), mean(kreis_stampfen$f36105Sort)),
+           `Mittelwert PM10` = c(mean(luftqual$`Feinstaub PM10`[luftqual$Station == "Rosengarten"], na.rm = T),
+                                 mean(luftqual$`Feinstaub PM10`[luftqual$Station == "Schimmelstrasse"], na.rm = T), 
+                                 mean(luftqual$`Feinstaub PM10`[luftqual$Station == "Stampfenbachstrasse"], na.rm = T))))
 ```
 
 Hierbei ist erkennbar das an der Schimmelstrasse eine höhere durchschnittliche Feinstaubbelastung gemessen wurde. Zugleich ist auch die durchschnittliche Zufriedenheit der Bevölkerung tiefer als bei den anderen Messtationen.
 
-Um festzustellen ob die Zufriedenheit nur zufällig tiefer ist wird nun getestet. Dabei ist die Nullhypthese, dass es keinen Zufriedenheitsunterschied zwischen den Stadtkreisen gibt.
+Um festzustellen, ob die Zufriedenheit nur zufällig tiefer ist, wird getestet. Dabei ist die Nullhypthese, dass es keinen Zufriedenheitsunterschied zwischen den Stadtkreisen gibt.
 
 ```{r}
 wilcox.test(x = kreis_rosen$f36105Sort, y = kreis_schimmel$f36105Sort,
@@ -342,7 +346,7 @@ wilcox.test(x = kreis_schimmel$f36105Sort, y = kreis_stampfen$f36105Sort,
 Die Nullhypothese wird beim ersten und dritten Test verworfen. Das heisst, dass die Zufriedenheit der Bevölkerung im Kreis 3 und 4 signifikant tiefer ist.
 
 \newpage
-# __Fazit__
+# Fazit
 
 In dieser Aufgabe wurden Luftqualitätsmessungen und Bevölkerungsbefragungen in der Stadt Zürich ausgewertet. Aus unseren Untersuchungen geht hervor, dass die Regendauer einen Einfluss auf die Feinstaubkonzentration in der Luft hat. Ebenfalls sind die Personen, welche im Stadtkreis 3 und 4 Wohnhaft sind unzufriedener mit dem öffentlichen Grünraum im Quartier, als in den Stadkreisen 1, 2, 5 und 10. Die Schwierigkeit dieser Aufgabe bestand in der Datenaufbereitung, welche auch am meisten Zeit in Anspruch genommen hat. 
 

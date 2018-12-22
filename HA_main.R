@@ -112,6 +112,7 @@ luftqual.PM10 <- luftqual %>% ungroup() %>%
 # Anzahl ueberschrittener Tagesmittel-Grenzwerte pro Station
 luftqual.PM10 %>% group_by(Station) %>% summarize(n = sum(PM10_uberschritt, na.rm = T))
 
+
 # ueberschrittenen Tagesmittelgrenzwerte fuer alle Stationen ueber die Zeit in einer Grafik
 luftqual.PM10 %>% filter(PM10_uberschritt) %>% 
   ggplot(aes(x=Datum, y=`Feinstaub PM10`)) + geom_point(aes(color = Station)) + ggtitle("PM10 > 50")
@@ -172,6 +173,7 @@ PM10_test <- ordered_PM10 %>% group_by(Datum) %>%
 t.test(x = PM10_test$PM10_mean[PM10_test$Regendauer != 0], 
        y = PM10_test$PM10_mean[PM10_test$Regendauer == 0],
        conf.level = 0.99, alternative = "less")
+
 # p < 0.01 --> h0 verwerfen 
 # An Tagen mit Regen ist die Feinstaubbelastung kleiner als an Tagen ohne Regen
 
@@ -216,6 +218,12 @@ mean(kreis_schimmel$f36105Sort)
 mean(luftqual$`Feinstaub PM10`[luftqual$Station == "Schimmelstrasse"], na.rm = T) 
 mean(kreis_stampfen$f36105Sort)
 mean(luftqual$`Feinstaub PM10`[luftqual$Station == "Stampfenbachstrasse"], na.rm = T)
+
+data.frame(Station = c("Rosengarten", "Schimmelstrasse", "Stampfenbachstrasse"),
+                 `Mittelwert Noten` = c(mean(kreis_rosen$f36105Sort), mean(kreis_schimmel$f36105Sort), mean(kreis_stampfen$f36105Sort)),
+                 `Mittelwert PM10` = c(mean(luftqual$`Feinstaub PM10`[luftqual$Station == "Rosengarten"], na.rm = T),
+                                       mean(luftqual$`Feinstaub PM10`[luftqual$Station == "Schimmelstrasse"], na.rm = T), 
+                                       mean(luftqual$`Feinstaub PM10`[luftqual$Station == "Stampfenbachstrasse"], na.rm = T)))
 
 boxplot(kreis_rosen$f36105Sort, kreis_schimmel$f36105Sort, kreis_stampfen$f36105Sort,
         names = c("Rosengarten", "Schimmelstrasse", "Stampfenbachstrasse"))
